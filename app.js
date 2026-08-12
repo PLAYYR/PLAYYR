@@ -5,20 +5,6 @@ const grid = document.getElementById('sportGrid');
 const authScreen = document.getElementById('authScreen');
 const profileModal = document.getElementById('profileModal');
 
-function applyProfile(profile) {
-  if (!profile || !profile.name) return;
-  const nameParts = profile.name.trim().split(/\s+/).filter(Boolean);
-  const firstName = nameParts[0] || 'Player';
-  const initials = nameParts.slice(0, 2).map(part => part[0]).join('').toUpperCase() || 'PL';
-  document.getElementById('homeGreeting').textContent = `Good evening, ${firstName} 👋`;
-  document.getElementById('profileDisplayName').textContent = profile.name;
-  document.getElementById('profileAvatar').textContent = initials;
-  if (profile.city) {
-    document.querySelectorAll('.cityText').forEach(element => element.textContent = profile.city);
-    document.getElementById('cityInput').value = profile.city;
-  }
-}
-
 function showAuthForm(mode) {
   const signingUp = mode === 'signup';
   document.getElementById('signUpTab').classList.toggle('active', signingUp);
@@ -48,7 +34,6 @@ document.getElementById('signInForm').onsubmit = event => {
     toast('Username or password is incorrect');
     return;
   }
-  applyProfile(JSON.parse(localStorage.getItem('playyrDemoProfile') || 'null'));
   authScreen.classList.add('hidden');
   document.getElementById('onboarding').classList.remove('hidden');
 };
@@ -64,7 +49,9 @@ document.getElementById('profileForm').onsubmit = event => {
     city: document.getElementById('profileCity').value.trim()
   };
   localStorage.setItem('playyrDemoProfile', JSON.stringify(profile));
-  applyProfile(profile);
+  document.querySelectorAll('.cityText').forEach(element => element.textContent = profile.city);
+  document.getElementById('cityInput').value = profile.city;
+  document.querySelector('.page-title').previousElementSibling.textContent = `Good evening, ${profile.name.split(' ')[0]} 👋`;
   profileModal.classList.add('hidden');
   authScreen.classList.add('hidden');
   document.getElementById('onboarding').classList.remove('hidden');
@@ -135,20 +122,15 @@ document.getElementById('useLocation').onclick = () => {
   );
 };
 
-function navigateTo(pageId) {
-  document.querySelectorAll('.nav button').forEach(item => {
-    item.classList.toggle('active', item.dataset.page === pageId);
-  });
-  document.querySelectorAll('.page').forEach(page => page.classList.add('hidden'));
-  document.getElementById(pageId).classList.remove('hidden');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
 document.querySelectorAll('.nav button').forEach(button => {
-  button.onclick = () => navigateTo(button.dataset.page);
+  button.onclick = () => {
+    document.querySelectorAll('.nav button').forEach(item => item.classList.remove('active'));
+    button.classList.add('active');
+    document.querySelectorAll('.page').forEach(page => page.classList.add('hidden'));
+    document.getElementById(button.dataset.page).classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 });
-
-document.getElementById('profileAvatar').onclick = () => navigateTo('profilePage');
 
 document.querySelectorAll('.filters').forEach(row => {
   row.addEventListener('click', event => {
@@ -196,5 +178,3 @@ function toast(message) {
   clearTimeout(window.toastTimer);
   window.toastTimer = setTimeout(() => element.classList.remove('show'), 2600);
 }
-
-applyProfile(JSON.parse(localStorage.getItem('playyrDemoProfile') || 'null'));
