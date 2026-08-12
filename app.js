@@ -2,6 +2,62 @@ const { sports } = window.PLAYYR_DATA;
 
 const selected = new Set();
 const grid = document.getElementById('sportGrid');
+const authScreen = document.getElementById('authScreen');
+const profileModal = document.getElementById('profileModal');
+
+function showAuthForm(mode) {
+  const signingUp = mode === 'signup';
+  document.getElementById('signUpTab').classList.toggle('active', signingUp);
+  document.getElementById('signInTab').classList.toggle('active', !signingUp);
+  document.getElementById('signUpForm').classList.toggle('hidden', !signingUp);
+  document.getElementById('signInForm').classList.toggle('hidden', signingUp);
+}
+
+document.getElementById('signUpTab').onclick = () => showAuthForm('signup');
+document.getElementById('signInTab').onclick = () => showAuthForm('signin');
+
+document.getElementById('signUpForm').onsubmit = event => {
+  event.preventDefault();
+  const username = document.getElementById('signUpUsername').value.trim();
+  const password = document.getElementById('signUpPassword').value;
+  localStorage.setItem('playyrDemoAccount', JSON.stringify({ username, password }));
+  profileModal.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+};
+
+document.getElementById('signInForm').onsubmit = event => {
+  event.preventDefault();
+  const username = document.getElementById('signInUsername').value.trim();
+  const password = document.getElementById('signInPassword').value;
+  const account = JSON.parse(localStorage.getItem('playyrDemoAccount') || 'null');
+  if (!account || account.username !== username || account.password !== password) {
+    toast('Username or password is incorrect');
+    return;
+  }
+  authScreen.classList.add('hidden');
+  document.getElementById('onboarding').classList.remove('hidden');
+};
+
+document.getElementById('profileForm').onsubmit = event => {
+  event.preventDefault();
+  const profile = {
+    name: document.getElementById('fullName').value.trim(),
+    email: document.getElementById('profileEmail').value.trim(),
+    phone: document.getElementById('profilePhone').value.trim(),
+    birthDate: document.getElementById('birthDate').value,
+    gender: document.getElementById('profileGender').value,
+    city: document.getElementById('profileCity').value.trim()
+  };
+  localStorage.setItem('playyrDemoProfile', JSON.stringify(profile));
+  document.querySelectorAll('.cityText').forEach(element => element.textContent = profile.city);
+  document.getElementById('cityInput').value = profile.city;
+  document.querySelector('.page-title').previousElementSibling.textContent = `Good evening, ${profile.name.split(' ')[0]} 👋`;
+  profileModal.classList.add('hidden');
+  authScreen.classList.add('hidden');
+  document.getElementById('onboarding').classList.remove('hidden');
+  document.body.style.overflow = '';
+  toast('Profile saved — now pick your games');
+};
 
 sports.forEach(([icon, name, type]) => {
   const button = document.createElement('button');

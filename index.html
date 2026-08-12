@@ -53,15 +53,15 @@
     main { padding:0 20px; }
     .greeting { color:var(--muted); font-size:13px; margin:6px 0; }
     .page-title { font-size:31px; line-height:1.08; margin:0 0 20px; }
-    .hero { background:var(--green); color:white; border-radius:26px; padding:22px; position:relative; overflow:hidden; min-height:238px; box-shadow:var(--shadow); }
+    .hero { background:var(--green); color:white; border-radius:26px; padding:22px; position:relative; overflow:hidden; min-height:238px; box-shadow:var(--shadow); display:flex; flex-direction:column; }
     .hero:after { content:'';position:absolute;width:180px;height:180px;border:42px solid #ffffff0c;border-radius:50%;right:-75px;bottom:-65px; }
     .tag { display:inline-flex;align-items:center;gap:6px;border-radius:30px;padding:6px 9px;background:#ffffff16;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase; }
     .dot { width:6px;height:6px;background:var(--lime);border-radius:50%; }
     .hero h2 { font-size:27px; max-width:280px; margin:22px 0 8px; }
-    .hero p { color:#cbd8d0; font-size:13px; max-width:270px; }
-    .hero-foot { position:absolute;left:22px;right:22px;bottom:20px;display:flex;justify-content:space-between;align-items:end;z-index:1; }
+    .hero p { color:#cbd8d0; font-size:13px; line-height:1.5; max-width:270px; margin-bottom:20px; }
+    .hero-foot { margin-top:auto;display:flex;justify-content:space-between;align-items:flex-end;gap:16px;z-index:1;position:relative; }
     .hero-foot button { border:0;background:var(--lime);border-radius:12px;padding:11px 16px;font-weight:800; }
-    .hero-foot strong { font:700 24px 'Manrope'; }
+    .hero-foot strong { font:700 24px 'Manrope'; white-space:nowrap; }
     .section-head { display:flex;justify-content:space-between;align-items:center;margin:28px 0 13px; }
     .section-head h2 { font-size:19px;margin:0; }
     .link { border:0;background:none;color:var(--muted);font-size:12px;font-weight:700; }
@@ -123,12 +123,31 @@
     .fee-box { background:#ebf7c9;border:1px solid #d5e9a1;border-radius:16px;padding:14px;display:flex;align-items:center;justify-content:space-between;margin:19px 0 14px; }
     .fee-box b { font:800 20px 'Manrope'; }.fee-box span { display:block;font-size:11px;font-weight:800; }.fee-box small { color:#5f6950;font-size:10px; }
     .terms { color:var(--muted);font-size:10px;line-height:1.45;text-align:center;margin:10px 14px 0; }
+    .auth { min-height:100vh;background:var(--green);color:white;padding:28px 24px;display:flex;flex-direction:column; }
+    .auth-copy { margin:auto 0 26px; }.auth-copy h1 { font-size:42px;line-height:1.02;margin:14px 0 12px; }.auth-copy p { color:#d2ded7;line-height:1.5; }
+    .auth-card { background:var(--paper);color:var(--ink);border-radius:25px;padding:20px;box-shadow:var(--shadow); }
+    .auth-tabs { display:grid;grid-template-columns:1fr 1fr;background:#e9ebe3;border-radius:12px;padding:4px;margin-bottom:19px; }
+    .auth-tabs button { border:0;background:transparent;border-radius:9px;padding:10px;font-weight:800;color:var(--muted); }.auth-tabs button.active { background:white;color:var(--ink);box-shadow:0 3px 10px #19201912; }
+    .auth-form h2 { font-size:23px;margin-bottom:5px; }.auth-form>p { color:var(--muted);font-size:12px;margin-bottom:18px; }
+    .password-note { color:var(--muted);font-size:10px;margin:-8px 0 15px; }
+    .profile-modal { border-radius:28px 28px 0 0; }.profile-modal .primary { margin-top:4px; }
+    @media (max-width:360px) { .hero-foot { align-items:stretch;flex-direction:column; }.hero-foot button { width:100%; }.hero { min-height:285px; } }
     @media (min-width:700px) { body{padding:24px 0}.app{min-height:calc(100vh - 48px);border-radius:28px}.onboarding,.screen{min-height:calc(100vh - 48px)}.nav{bottom:24px;border-radius:0 0 28px 28px;} }
   </style>
 </head>
 <body>
 <div class="app">
-  <section id="onboarding" class="onboarding">
+  <section id="authScreen" class="auth">
+    <div class="brand"><i class="brand-mark"></i> PLAYYR</div>
+    <div class="auth-copy"><span class="eyebrow">Your city. Your game.</span><h1>Find your<br>people to play.</h1><p>Challenges, tournaments and local crews—all built around the sports you love.</p></div>
+    <div class="auth-card">
+      <div class="auth-tabs"><button id="signUpTab" class="active" type="button">Sign up</button><button id="signInTab" type="button">Sign in</button></div>
+      <form id="signUpForm" class="auth-form"><h2>Create your account</h2><p>Start your PLAYYR journey today.</p><div class="field"><label for="signUpUsername">USERNAME</label><input id="signUpUsername" autocomplete="username" minlength="3" required placeholder="Choose a username"></div><div class="field"><label for="signUpPassword">PASSWORD</label><input id="signUpPassword" type="password" autocomplete="new-password" minlength="8" required placeholder="Create a password"></div><div class="password-note">Use at least 8 characters.</div><button class="primary" type="submit">Create account</button></form>
+      <form id="signInForm" class="auth-form hidden"><h2>Welcome back</h2><p>Sign in to continue playing.</p><div class="field"><label for="signInUsername">USERNAME</label><input id="signInUsername" autocomplete="username" required placeholder="Your username"></div><div class="field"><label for="signInPassword">PASSWORD</label><input id="signInPassword" type="password" autocomplete="current-password" required placeholder="Your password"></div><button class="primary" type="submit">Sign in</button></form>
+    </div>
+  </section>
+
+  <section id="onboarding" class="onboarding hidden">
     <div class="brand"><i class="brand-mark"></i> PLAYYR</div>
     <div class="progress"><i class="active"></i><i id="p2"></i></div>
     <div id="interestStep" class="step">
@@ -193,6 +212,17 @@
     </nav>
   </section>
   <div id="toast" class="toast"></div>
+  <div id="profileModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
+    <form id="profileForm" class="modal profile-modal">
+      <div class="modal-head"><div><span class="eyebrow">One last step</span><h2 id="profileTitle">Complete your profile</h2><p>This helps us personalize events and keep your account secure.</p></div></div>
+      <div class="field"><label for="fullName">FULL NAME</label><input id="fullName" autocomplete="name" required placeholder="Your full name"></div>
+      <div class="field-row"><div class="field"><label for="profileEmail">EMAIL</label><input id="profileEmail" type="email" autocomplete="email" required placeholder="you@email.com"></div><div class="field"><label for="profilePhone">PHONE NUMBER</label><input id="profilePhone" type="tel" autocomplete="tel" pattern="[0-9 +()-]{8,15}" required placeholder="+91 98765 43210"></div></div>
+      <div class="field-row"><div class="field"><label for="birthDate">DATE OF BIRTH</label><input id="birthDate" type="date" required></div><div class="field"><label for="profileGender">GENDER</label><select id="profileGender" required><option value="" disabled selected>Select</option><option>Male</option><option>Female</option><option>Non-binary</option><option>Prefer not to say</option></select></div></div>
+      <div class="field"><label for="profileCity">CITY</label><input id="profileCity" autocomplete="address-level2" required placeholder="e.g. Bengaluru"></div>
+      <button class="primary" type="submit">Save & choose your sports</button>
+      <p class="terms">You can update these details later from your profile.</p>
+    </form>
+  </div>
   <div id="hostModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="hostTitle">
     <form id="hostForm" class="modal">
       <div class="modal-head"><div><span class="eyebrow">Host on PLAYYR</span><h2 id="hostTitle">List your tournament</h2><p>Share the essentials. You can add rules and fixtures later.</p></div><button type="button" id="closeHost" class="close" aria-label="Close">×</button></div>
