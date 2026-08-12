@@ -5,6 +5,20 @@ const grid = document.getElementById('sportGrid');
 const authScreen = document.getElementById('authScreen');
 const profileModal = document.getElementById('profileModal');
 
+function applyProfile(profile) {
+  if (!profile || !profile.name) return;
+  const nameParts = profile.name.trim().split(/\s+/).filter(Boolean);
+  const firstName = nameParts[0] || 'Player';
+  const initials = nameParts.slice(0, 2).map(part => part[0]).join('').toUpperCase() || 'PL';
+  document.getElementById('homeGreeting').textContent = `Good evening, ${firstName} 👋`;
+  document.getElementById('profileDisplayName').textContent = profile.name;
+  document.getElementById('profileAvatar').textContent = initials;
+  if (profile.city) {
+    document.querySelectorAll('.cityText').forEach(element => element.textContent = profile.city);
+    document.getElementById('cityInput').value = profile.city;
+  }
+}
+
 function showAuthForm(mode) {
   const signingUp = mode === 'signup';
   document.getElementById('signUpTab').classList.toggle('active', signingUp);
@@ -34,6 +48,7 @@ document.getElementById('signInForm').onsubmit = event => {
     toast('Username or password is incorrect');
     return;
   }
+  applyProfile(JSON.parse(localStorage.getItem('playyrDemoProfile') || 'null'));
   authScreen.classList.add('hidden');
   document.getElementById('onboarding').classList.remove('hidden');
 };
@@ -49,9 +64,7 @@ document.getElementById('profileForm').onsubmit = event => {
     city: document.getElementById('profileCity').value.trim()
   };
   localStorage.setItem('playyrDemoProfile', JSON.stringify(profile));
-  document.querySelectorAll('.cityText').forEach(element => element.textContent = profile.city);
-  document.getElementById('cityInput').value = profile.city;
-  document.querySelector('.page-title').previousElementSibling.textContent = `Good evening, ${profile.name.split(' ')[0]} 👋`;
+  applyProfile(profile);
   profileModal.classList.add('hidden');
   authScreen.classList.add('hidden');
   document.getElementById('onboarding').classList.remove('hidden');
@@ -178,3 +191,5 @@ function toast(message) {
   clearTimeout(window.toastTimer);
   window.toastTimer = setTimeout(() => element.classList.remove('show'), 2600);
 }
+
+applyProfile(JSON.parse(localStorage.getItem('playyrDemoProfile') || 'null'));
