@@ -135,15 +135,20 @@ document.getElementById('useLocation').onclick = () => {
   );
 };
 
+function navigateTo(pageId) {
+  document.querySelectorAll('.nav button').forEach(item => {
+    item.classList.toggle('active', item.dataset.page === pageId);
+  });
+  document.querySelectorAll('.page').forEach(page => page.classList.add('hidden'));
+  document.getElementById(pageId).classList.remove('hidden');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 document.querySelectorAll('.nav button').forEach(button => {
-  button.onclick = () => {
-    document.querySelectorAll('.nav button').forEach(item => item.classList.remove('active'));
-    button.classList.add('active');
-    document.querySelectorAll('.page').forEach(page => page.classList.add('hidden'));
-    document.getElementById(button.dataset.page).classList.remove('hidden');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  button.onclick = () => navigateTo(button.dataset.page);
 });
+
+document.getElementById('profileAvatar').onclick = () => navigateTo('profilePage');
 
 document.querySelectorAll('.filters').forEach(row => {
   row.addEventListener('click', event => {
