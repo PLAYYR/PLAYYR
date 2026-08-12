@@ -104,12 +104,37 @@ document.getElementById('back').onclick = () => {
   document.getElementById('p2').classList.remove('active');
 };
 
+const resetBtn = document.getElementById('resetBtn');
+if (resetBtn) resetBtn.onclick = () => {
+  document.getElementById('mainApp').classList.add('hidden');
+  document.getElementById('locationStep').classList.add('hidden');
+  document.getElementById('interestStep').classList.remove('hidden');
+  document.getElementById('p2').classList.remove('active');
+  document.getElementById('onboarding').classList.remove('hidden');
+  document.getElementById('count').textContent = selected.size;
+  document.getElementById('interestNext').disabled = selected.size < 3;
+  window.scrollTo(0, 0);
+};
+
+function renderChosenInterests() {
+  const container = document.getElementById('chosenInterests');
+  if (!container) return;
+  container.innerHTML = '';
+  sports.filter(([, name]) => selected.has(name)).forEach(([icon, name]) => {
+    const chip = document.createElement('span');
+    chip.className = 'chip active';
+    chip.textContent = `${icon} ${name}`;
+    container.appendChild(chip);
+  });
+}
+
 function enter(city = 'Bengaluru') {
   document.querySelectorAll('.cityText').forEach(element => element.textContent = city);
   document.getElementById('onboarding').classList.add('hidden');
   document.getElementById('mainApp').classList.remove('hidden');
   localStorage.setItem('playyrPreferences', JSON.stringify([...selected]));
   renderSettingsPreferences();
+  renderChosenInterests();
   window.scrollTo(0, 0);
 }
 
