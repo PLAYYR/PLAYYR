@@ -5,15 +5,17 @@ const grid = document.getElementById('sportGrid');
 const authScreen = document.getElementById('authScreen');
 const profileModal = document.getElementById('profileModal');
 
+function setText(id, text) { const el = document.getElementById(id); if (el) el.textContent = text; }
+
 function applyProfile(profile) {
   if (!profile || !profile.name) return;
   const parts = profile.name.trim().split(/\s+/).filter(Boolean);
   const initials = parts.slice(0, 2).map(part => part[0]).join('').toUpperCase() || 'PL';
-  document.getElementById('homeGreeting').textContent = `Good evening, ${parts[0] || 'Player'} 👋`;
-  document.getElementById('profileDisplayName').textContent = profile.name;
-  document.getElementById('profileAvatar').textContent = initials;
-  document.getElementById('settingsAvatar').textContent = initials;
-  document.getElementById('settingsAccount').textContent = profile.email || 'Your PLAYYR account';
+  setText('homeGreeting', `Good evening, ${parts[0] || 'Player'} 👋`);
+  setText('profileDisplayName', profile.name);
+  setText('profileAvatar', initials);
+  setText('settingsAvatar', initials);
+  setText('settingsAccount', profile.email || 'Your PLAYYR account');
   if (profile.city) { document.querySelectorAll('.cityText').forEach(el => el.textContent = profile.city); document.getElementById('cityInput').value = profile.city; }
 }
 
@@ -132,9 +134,10 @@ document.getElementById('useLocation').onclick = () => {
   );
 };
 
-function navigateTo(pageId) { document.querySelectorAll('.nav button').forEach(item => item.classList.toggle('active', item.dataset.page === pageId)); document.querySelectorAll('.page').forEach(page => page.classList.add('hidden')); document.getElementById(pageId).classList.remove('hidden'); window.scrollTo({top:0,behavior:'smooth'}); }
+function navigateTo(pageId) { const page = document.getElementById(pageId); if (!page) return; document.querySelectorAll('.nav button').forEach(item => item.classList.toggle('active', item.dataset.page === pageId)); document.querySelectorAll('.page').forEach(el => el.classList.add('hidden')); page.classList.remove('hidden'); window.scrollTo({top:0,behavior:'smooth'}); }
 document.querySelectorAll('.nav button').forEach(button => button.onclick = () => navigateTo(button.dataset.page));
-document.getElementById('profileAvatar').onclick = () => navigateTo('settingsPage');
+const profileAvatarBtn = document.getElementById('profileAvatar');
+if (profileAvatarBtn) profileAvatarBtn.onclick = () => navigateTo('settingsPage');
 
 document.querySelectorAll('.filters').forEach(row => {
   row.addEventListener('click', event => {
@@ -173,12 +176,14 @@ document.getElementById('hostForm').onsubmit = event => {
   toast(`${name} submitted — ₹49 payment initiated`);
 };
 
-function renderSettingsPreferences() { const container=document.getElementById('settingsPreferences'); container.innerHTML=''; sports.forEach(([icon,name])=>{ const button=document.createElement('button'); button.type='button'; button.className=`preference${selected.has(name)?' selected':''}`; button.textContent=`${icon} ${name}`; button.onclick=()=>{ if(selected.has(name)){if(selected.size<=3)return toast('Keep at least 3 sports selected');selected.delete(name)}else{if(selected.size>=4)return toast('Choose up to 4 sports');selected.add(name)} localStorage.setItem('playyrPreferences',JSON.stringify([...selected]));renderSettingsPreferences();toast('Sports preferences updated')};container.appendChild(button)}); }
+function renderSettingsPreferences() { const container=document.getElementById('settingsPreferences'); if(!container) return; container.innerHTML=''; sports.forEach(([icon,name])=>{ const button=document.createElement('button'); button.type='button'; button.className=`preference${selected.has(name)?' selected':''}`; button.textContent=`${icon} ${name}`; button.onclick=()=>{ if(selected.has(name)){if(selected.size<=3)return toast('Keep at least 3 sports selected');selected.delete(name)}else{if(selected.size>=4)return toast('Choose up to 4 sports');selected.add(name)} localStorage.setItem('playyrPreferences',JSON.stringify([...selected]));renderSettingsPreferences();toast('Sports preferences updated')};container.appendChild(button)}); }
 JSON.parse(localStorage.getItem('playyrPreferences')||'[]').forEach(name=>selected.add(name));
 renderSettingsPreferences();
-['discoverableSetting','activitySetting','locationSetting','alertsSetting'].forEach(id=>{const control=document.getElementById(id);const saved=localStorage.getItem(`playyr-${id}`);if(saved!==null)control.checked=saved==='true';control.onchange=()=>{localStorage.setItem(`playyr-${id}`,control.checked);toast('Setting saved')}});
-document.getElementById('changePasswordBtn').onclick=()=>toast('Password changes require secure backend authentication');
-document.getElementById('signOutBtn').onclick=()=>{document.getElementById('mainApp').classList.add('hidden');authScreen.classList.remove('hidden');showAuthForm('signin');window.scrollTo(0,0);toast('Signed out')};
+['discoverableSetting','activitySetting','locationSetting','alertsSetting'].forEach(id=>{const control=document.getElementById(id);if(!control)return;const saved=localStorage.getItem(`playyr-${id}`);if(saved!==null)control.checked=saved==='true';control.onchange=()=>{localStorage.setItem(`playyr-${id}`,control.checked);toast('Setting saved')}});
+const changePasswordBtn=document.getElementById('changePasswordBtn');
+if(changePasswordBtn) changePasswordBtn.onclick=()=>toast('Password changes require secure backend authentication');
+const signOutBtn=document.getElementById('signOutBtn');
+if(signOutBtn) signOutBtn.onclick=()=>{document.getElementById('mainApp').classList.add('hidden');authScreen.classList.remove('hidden');showAuthForm('signin');window.scrollTo(0,0);toast('Signed out')};
 
 function toast(message) {
   const element = document.getElementById('toast');

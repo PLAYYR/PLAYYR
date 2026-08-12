@@ -806,7 +806,7 @@
     </div>
     <main>
       <section id="homePage" class="page">
-        <p class="greeting">Good evening, Aarav 👋</p><h1 class="page-title">Ready to move?</h1>
+        <p id="homeGreeting" class="greeting">Good evening, Aarav 👋</p><h1 class="page-title">Ready to move?</h1>
         <div class="presence">
           <button class="player add action" data-message="Invite link copied — call your squad in!"><i>+</i><span>Invite</span></button>
           <button class="player live action" data-message="Rohit is live at Agara Turf right now"><i>RS</i><span>Rohit</span></button>
@@ -897,7 +897,7 @@
     <form id="profileForm" class="modal profile-modal">
       <div class="modal-head"><div><span class="eyebrow">One last step</span><h2 id="profileTitle">Complete your profile</h2><p>This helps us personalize events and keep your account secure.</p></div></div>
       <div class="field"><label for="fullName">FULL NAME</label><input id="fullName" autocomplete="name" required placeholder="Your full name"></div>
-      <div class="field-row"><div class="field"><label for="profileEmail">EMAIL</label><input id="profileEmail" type="email" autocomplete="email" required placeholder="you@email.com"></div><div class="field"><label for="profilePhone">PHONE NUMBER</label><input id="profilePhone" type="tel" autocomplete="tel" pattern="[0-9 +()-]{8,15}" required placeholder="+91 98765 43210"></div></div>
+      <div class="field-row"><div class="field"><label for="profileEmail">EMAIL</label><input id="profileEmail" type="email" autocomplete="email" required placeholder="you@email.com"></div><div class="field"><label for="profilePhone">PHONE NUMBER</label><input id="profilePhone" type="tel" autocomplete="tel" pattern="[0-9 +\(\)\-]{8,15}" required placeholder="+91 98765 43210"></div></div>
       <div class="field-row"><div class="field"><label for="birthDate">DATE OF BIRTH</label><input id="birthDate" type="date" required></div><div class="field"><label for="profileGender">GENDER</label><select id="profileGender" required><option value="" disabled selected>Select</option><option>Male</option><option>Female</option><option>Non-binary</option><option>Prefer not to say</option></select></div></div>
       <div class="field"><label for="profileCity">CITY</label><input id="profileCity" autocomplete="address-level2" required placeholder="e.g. Bengaluru"></div>
       <button class="primary" type="submit">Save & choose your sports</button>
