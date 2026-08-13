@@ -420,10 +420,17 @@ document.getElementById('yourTeamsList')?.addEventListener('click', async event 
   }
   const removeButton = event.target.closest('[data-remove-member]');
   if (removeButton) {
-    if (!confirm('Remove this player from the team?')) return;
-    const { error } = await sb.rpc('remove_team_member', { p_team_id:removeButton.dataset.teamId, p_user_id:removeButton.dataset.removeMember });
-    toast(error ? error.message : 'Player removed');
-    if (!error) await loadYourTeams();
+    removeButton.disabled = true;
+    removeButton.textContent = 'Removing...';
+    const { data, error } = await sb.rpc('remove_team_member', { p_team_id:removeButton.dataset.teamId, p_user_id:removeButton.dataset.removeMember });
+    if (error || !data?.removed) {
+      removeButton.disabled = false;
+      removeButton.textContent = 'Remove';
+      toast(error?.message || data?.message || 'Player could not be removed');
+      return;
+    }
+    toast(data.message || 'Player removed');
+    await loadYourTeams();
   }
 });
 
