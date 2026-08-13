@@ -144,6 +144,8 @@ async function hydrateFromProfile(profile) {
   renderSettingsPreferences();
   bindSettingsToggles(profile);
   renderChosenInterests();
+  const activeEventFilter = document.querySelector('#eventFilters .chip.active');
+  filterEvents(activeEventFilter ? activeEventFilter.dataset.filter : 'For you');
 }
 
 async function enterAppWithProfile(profile) {
@@ -363,6 +365,27 @@ document.querySelectorAll('.filters').forEach(row => {
 document.querySelectorAll('.action').forEach(button => {
   button.onclick = () => toast(button.dataset.message);
 });
+
+const eventFilters = document.getElementById('eventFilters');
+function filterEvents(filter = 'For you') {
+  const cards = [...document.querySelectorAll('#eventsPage .event-card')];
+  let visible = 0;
+  cards.forEach(card => {
+    const matches = filter === 'For you'
+      ? (selected.size === 0 || selected.has(card.dataset.category))
+      : card.dataset.category === filter;
+    card.classList.toggle('hidden', !matches);
+    if (matches) visible += 1;
+  });
+  document.getElementById('eventsEmpty').classList.toggle('hidden', visible > 0);
+}
+
+if (eventFilters) eventFilters.addEventListener('click', event => {
+  const button = event.target.closest('[data-filter]');
+  if (!button) return;
+  filterEvents(button.dataset.filter);
+});
+filterEvents();
 
 const streakButton = document.getElementById('streakButton');
 if (streakButton) streakButton.onclick = () => {

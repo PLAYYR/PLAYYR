@@ -563,6 +563,8 @@
       transition:.22s;
     }
     .host:hover { color:var(--lime);border-color:rgba(123,196,40,.55);background:rgba(123,196,40,.08); }
+    .empty-state { margin:18px 0;padding:24px 18px;text-align:center;border:1px dashed var(--stroke-strong);border-radius:var(--r-lg);color:var(--muted);background:rgba(15,21,15,.025); }
+    .empty-state strong { display:block;color:var(--ink);font-size:15px;margin-bottom:5px; }
 
     .find-banner {
       position:relative;overflow:hidden;
@@ -858,10 +860,11 @@
       <section id="eventsPage" class="page hidden">
         <p class="greeting"><span class="cityText">Bengaluru</span> · Within 15 km</p><h1 class="page-title">Find your next<br>competition.</h1>
         <button id="hostBtn" class="host" type="button">＋ List a tournament on PLAYYR</button>
-        <div class="filters"><button class="chip active">For you</button><button class="chip">Football</button><button class="chip">BGMI</button><button class="chip">Badminton</button><button class="chip">Cricket</button></div>
+        <div id="eventFilters" class="filters"><button class="chip active" data-filter="For you">For you</button><button class="chip" data-filter="Football">Football</button><button class="chip" data-filter="BGMI">BGMI</button><button class="chip" data-filter="Badminton">Badminton</button><button class="chip" data-filter="Cricket">Cricket</button></div>
         <article class="event-card" data-category="Football"><div class="event-cover"><span class="event-type">⚽ FOOTBALL</span><span class="distance">3.2 km</span><span class="cover-status hot">🔥 Filling fast</span></div><div class="event-body"><h3>Sunday 5-a-side Cup</h3><div class="meta"><span>📅 18 Aug · 7:00 AM</span><span>📍 Turf Park, HSR</span></div><div class="going"><i class="face"></i><i class="face"></i><i class="face"></i><span><b>+18 going</b> · 4 from your crew</span></div><div class="event-bottom"><span class="spots"><b>3 team spots</b> left · ₹1,200/team</span><button class="small-btn action" data-message="Registration saved — organizer details are ready!">Register</button></div></div></article>
         <article class="event-card" data-category="BGMI"><div class="event-cover orange"><span class="event-type">🎮 BGMI</span><span class="distance">Online · Local</span><span class="cover-status"><i class="live-dot"></i>Qualifiers live</span></div><div class="event-body"><h3>PLAYYR City Showdown</h3><div class="meta"><span>📅 21 Aug · 6:30 PM</span><span>🏆 Prize pool ₹25,000</span></div><div class="going"><i class="face"></i><i class="face"></i><i class="face"></i><span><b>+64 going</b> · 9 squads from HSR</span></div><div class="event-bottom"><span class="spots"><b>12 squad spots</b> left · ₹399</span><button class="small-btn action" data-message="Your squad registration has been started!">Register</button></div></div></article>
         <article class="event-card" data-category="Badminton"><div class="event-cover blue"><span class="event-type">🏸 BADMINTON</span><span class="distance">6.8 km</span><span class="cover-status">🤝 Partner finder on</span></div><div class="event-body"><h3>Open Doubles Night</h3><div class="meta"><span>📅 24 Aug · 5:00 PM</span><span>📍 Smash Arena, Indiranagar</span></div><div class="going"><i class="face"></i><i class="face"></i><i class="face"></i><span><b>+11 going</b> · 2 need a partner</span></div><div class="event-bottom"><span class="spots"><b>7 pair spots</b> left · ₹600</span><button class="small-btn action" data-message="You're one step closer to the court!">Register</button></div></div></article>
+        <div id="eventsEmpty" class="empty-state hidden"><strong>No tournaments found</strong><span>Try another sport or list a tournament for your community.</span></div>
       </section>
 
       <section id="findPage" class="page hidden">
