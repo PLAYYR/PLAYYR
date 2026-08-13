@@ -138,8 +138,8 @@
     .link { border:0;background:none;color:var(--muted);font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;transition:.2s; }
     .link:hover { color:var(--lime); }
 
-    .auth { min-height:100vh; padding:30px 24px 34px; display:flex; flex-direction:column; }
-    .auth-copy { margin:auto 0 26px; }
+    .auth { min-height:100vh; padding:30px 24px 34px; display:flex; flex-direction:column; gap:28px; }
+    .auth-copy { margin:clamp(44px,9vh,96px) 0 0; }
     .auth-copy h1 {
       font-family:var(--display);font-weight:400;text-transform:uppercase;
       font-size:53px;line-height:.9;letter-spacing:0;margin:16px 0 14px;
@@ -735,13 +735,28 @@
       .hero { min-height:300px; }
     }
     @media (min-width:700px) {
-      body { padding:26px 0; }
-      .app { min-height:calc(100vh - 52px); border-radius:38px; border:1px solid var(--stroke); }
+      body { padding:26px; }
+      .app { width:min(100%,920px);max-width:920px;min-height:calc(100vh - 52px);border-radius:38px;border:1px solid var(--stroke);overflow:hidden; }
       .onboarding,.screen,.auth { min-height:calc(100vh - 52px); }
       .nav { bottom:44px; }
       .shell { padding-bottom:142px; }
+      main { width:min(100%,720px);margin:0 auto; }
       .modal { border-radius:var(--r-xl); margin-bottom:26px; border-bottom:1px solid var(--stroke); }
       .modal-backdrop { align-items:center; }
+    }
+    @media (min-width:900px) {
+      .app { width:min(100%,1120px);max-width:1120px; }
+      .auth { display:grid;grid-template-columns:minmax(0,1.08fr) minmax(360px,.92fr);grid-template-rows:auto 1fr;column-gap:clamp(52px,7vw,110px);align-items:center;padding:46px clamp(52px,7vw,92px); }
+      .auth>.brand { grid-column:1/-1;align-self:start; }
+      .auth-copy { grid-column:1;margin:0;align-self:center; }
+      .auth-copy h1 { font-size:clamp(66px,7vw,98px);max-width:590px; }
+      .auth-copy p { max-width:450px;font-size:16px; }
+      .auth-card { grid-column:2;grid-row:2;align-self:center;width:100%;max-width:430px;justify-self:end;padding:28px; }
+    }
+    @media (max-width:699px) and (min-height:780px) {
+      .auth { justify-content:flex-start; }
+      .auth-copy { margin:clamp(54px,10vh,88px) 0 0; }
+      .auth-card { margin-top:0; }
     }
     @media (prefers-reduced-motion:reduce) {
       *,*:before,*:after { animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
