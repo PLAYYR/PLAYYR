@@ -398,6 +398,39 @@ async function loadYourTeams() {
     const rows = members.map(member => `<div class="member-row"><i>${escapeHtml(initialsFor(member.display_name))}</i><span>${escapeHtml(member.display_name || 'PLAYYR member')}${member.user_id === team.creator_id ? ' · Creator' : ''}</span>${isCreator && member.user_id !== user.id ? `<button type="button" data-remove-member="${member.user_id}" data-team-id="${team.id}">Remove</button>` : ''}</div>`).join('');
     return `<article class="team owned-team"><div class="owned-team-summary"><div class="team-logo">${escapeHtml(initialsFor(team.name))}</div><div><h3>${escapeHtml(team.name)}</h3><p>${escapeHtml(team.sport)} · ${members.length}/${team.max_members} players</p></div>${isCreator ? '<span class="owner-pill">Creator</span>' : '<span class="owner-pill">Member</span>'}</div><div class="team-actions">${isCreator ? `<button class="small-btn" type="button" data-invite-code="${team.invite_code}" data-inviter="${escapeHtml(creatorName)}" data-team-name="${escapeHtml(team.name)}" data-team-sport="${escapeHtml(team.sport)}">Invite people</button>` : ''}<button class="ghost" type="button" data-toggle-members="${team.id}">View members</button></div><div id="members-${team.id}" class="member-list hidden">${rows}</div></article>`;
   }).join('');
+  list.querySelectorAll('[data-remove-member]').forEach(button => {
+    button.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      removeTeamMember(button);
+    });
+  });
+}
+
+async function removeTeamMember(removeButton) {
+  if (!removeButton || removeButton.dataset.removing === 'true') return;
+  if (!window.confirm('Remove this player from the team?')) return;
+  const teamId = removeButton.dataset.teamId;
+  const memberId = removeButton.dataset.removeMember;
+  removeButton.dataset.removing = 'true';
+  removeButton.disabled = true;
+  removeButton.textContent = 'Removing...';
+  const { data, error } = await sb.rpc('remove_team_member', { p_team_id:teamId, p_user_id:memberId });
+  let result = data;
+  if (typeof result === 'string') {
+    try { result = JSON.parse(result); } catch (_) {}
+  }
+  if (!error && result?.removed !== false) {
+    toast(result?.message || 'Player removed from the team');
+    await loadYourTeams();
+    return;
+  }
+  const message = error?.message || result?.message || 'Player could not be removed';
+  removeButton.dataset.removing = 'false';
+  removeButton.disabled = false;
+  removeButton.textContent = 'Try again';
+  removeButton.title = message;
+  toast(message);
 }
 
 async function openYourTeams() {
@@ -425,34 +458,6 @@ document.getElementById('yourTeamsList')?.addEventListener('click', async event 
   if (toggleButton) {
     document.getElementById(`members-${toggleButton.dataset.toggleMembers}`)?.classList.toggle('hidden');
     return;
-  }
-  const removeButton = event.target.closest('[data-remove-member]');
-  if (removeButton) {
-    const teamId = removeButton.dataset.teamId;
-    const memberId = removeButton.dataset.removeMember;
-    removeButton.disabled = true;
-    removeButton.textContent = 'Removing...';
-    const { data, error } = await sb.rpc('remove_team_member', { p_team_id:teamId, p_user_id:memberId });
-    let result = data;
-    if (typeof result === 'string') {
-      try { result = JSON.parse(result); } catch (_) {}
-    }
-    if (!error) {
-      const { data:remainingMember, error:verifyError } = await sb.from('team_members').select('user_id').eq('team_id', teamId).eq('user_id', memberId).maybeSingle();
-      if (!verifyError && !remainingMember) {
-        toast(result?.message || 'Player removed from the team');
-        await loadYourTeams();
-        return;
-      }
-    }
-    if (error || result?.removed === false) {
-      removeButton.disabled = false;
-      removeButton.textContent = 'Remove';
-      toast(error?.message || result?.message || 'Player could not be removed');
-      return;
-    }
-    toast(result?.message || 'Player removed');
-    await loadYourTeams();
   }
 });
 
