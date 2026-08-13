@@ -17,6 +17,24 @@ const SETTINGS_MAP = {
 
 function setText(id, text) { const el = document.getElementById(id); if (el) el.textContent = text; }
 
+function renderRadius(radius) {
+  const value = Math.min(50, Math.max(1, Number(radius) || 15));
+  const slider = document.getElementById('radiusSlider');
+  if (slider) {
+    slider.value = value;
+    slider.style.setProperty('--radius-progress', `${((value - 1) / 49) * 100}%`);
+  }
+  setText('radiusValue', `${value} km`);
+  document.querySelectorAll('.radiusText').forEach(element => element.textContent = `${value} km`);
+  document.querySelectorAll('#findPage .team').forEach(team => {
+    const label = team.querySelector('.sport-name')?.textContent || '';
+    const distance = Number((label.match(/([\d.]+)\s*km/i) || [])[1] || 0);
+    team.hidden = distance > value;
+  });
+  const activeEventFilter = document.querySelector('#eventFilters [data-filter].active');
+  filterEvents(activeEventFilter ? activeEventFilter.dataset.filter : 'For you');
+}
+
 function localDateKey(date = new Date()) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -221,6 +239,7 @@ document.getElementById('signInForm').onsubmit = async event => {
   const profile = await loadProfile(data.user.id);
   const displayProfile = withSavedOnboarding(profile, data.user);
   renderStreak(data.user.user_metadata || {});
+  renderRadius(data.user.user_metadata.playyr_radius_km || localStorage.getItem(`playyrRadius:${data.user.id}`));
   if (displayProfile.city && (displayProfile.sports || []).length >= 3) {
     await enterAppWithProfile(displayProfile);
     return;
@@ -353,6 +372,20 @@ document.querySelectorAll('.nav button').forEach(button => button.onclick = () =
 const profileAvatarBtn = document.getElementById('profileAvatar');
 if (profileAvatarBtn) profileAvatarBtn.onclick = () => navigateTo('settingsPage');
 
+const radiusSlider = document.getElementById('radiusSlider');
+if (radiusSlider) {
+  radiusSlider.oninput = () => renderRadius(radiusSlider.value);
+  radiusSlider.onchange = async () => {
+    const radius = Number(radiusSlider.value);
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) return;
+    localStorage.setItem(`playyrRadius:${user.id}`, String(radius));
+    const { error } = await sb.auth.updateUser({ data: { playyr_radius_km: radius } });
+    toast(error ? 'Radius saved on this device' : `Discovery radius set to ${radius} km`);
+  };
+}
+renderRadius(15);
+
 document.querySelectorAll('.filters').forEach(row => {
   row.addEventListener('click', event => {
     if (!event.target.classList.contains('chip')) return;
@@ -369,11 +402,15 @@ document.querySelectorAll('.action').forEach(button => {
 const eventFilters = document.getElementById('eventFilters');
 function filterEvents(filter = 'For you') {
   const cards = [...document.querySelectorAll('#eventsPage .event-card')];
+  const radius = Number(document.getElementById('radiusSlider')?.value) || 15;
   let visible = 0;
   cards.forEach(card => {
-    const matches = filter === 'For you'
+    const distanceLabel = card.querySelector('.distance')?.textContent || '';
+    const distance = Number((distanceLabel.match(/([\d.]+)\s*km/i) || [])[1] || 0);
+    const categoryMatches = filter === 'For you'
       ? (selected.size === 0 || selected.has(card.dataset.category))
       : card.dataset.category === filter;
+    const matches = categoryMatches && distance <= radius;
     card.hidden = !matches;
     card.classList.toggle('hidden', !matches);
     card.setAttribute('aria-hidden', String(!matches));
@@ -563,6 +600,7 @@ function toast(message) {
   if (!session) return;
   const profile = await loadProfile(session.user.id);
   const displayProfile = withSavedOnboarding(profile, session.user);
+  renderRadius(session.user.user_metadata.playyr_radius_km || localStorage.getItem(`playyrRadius:${session.user.id}`));
   if (displayProfile.city && (displayProfile.sports || []).length >= 3) {
     enterAppWithProfile(displayProfile);
     renderStreak(session.user.user_metadata || {});
