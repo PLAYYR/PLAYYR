@@ -563,6 +563,14 @@
       transition:.22s;
     }
     .host:hover { color:var(--lime);border-color:rgba(123,196,40,.55);background:rgba(123,196,40,.08); }
+    .find-list-cta {
+      width:100%;margin:8px 0 18px;padding:16px 17px;display:flex;align-items:center;justify-content:space-between;gap:12px;
+      border:1px solid rgba(123,196,40,.5);border-radius:var(--r-md);text-align:left;color:var(--ink);
+      background:linear-gradient(120deg,rgba(200,255,69,.92),rgba(151,231,66,.82));box-shadow:0 12px 28px rgba(123,196,40,.2);
+    }
+    .find-list-cta strong { display:block;font-family:var(--display);font-size:17px;letter-spacing:.04em;text-transform:uppercase; }
+    .find-list-cta small { display:block;margin-top:3px;font-size:10px;font-weight:700;color:rgba(15,21,15,.65); }
+    .find-list-cta i { font-style:normal;font-size:26px;line-height:1; }
     .empty-state { margin:18px 0;padding:24px 18px;text-align:center;border:1px dashed var(--stroke-strong);border-radius:var(--r-lg);color:var(--muted);background:rgba(15,21,15,.025); }
     .empty-state strong { display:block;color:var(--ink);font-size:15px;margin-bottom:5px; }
 
@@ -869,7 +877,7 @@
 
       <section id="findPage" class="page hidden">
         <p class="greeting">Teams playing near <span class="cityText">Bengaluru</span></p><h1 class="page-title">Your local<br>playground.</h1>
-        <button id="listTeamBtn" class="host" type="button">＋ List your team on PLAYYR</button>
+        <button id="listTeamBtn" class="find-list-cta" type="button"><span><strong>List your team</strong><small>Let nearby players discover and join you</small></span><i>＋</i></button>
         <div class="find-banner"><div><h3>6 crews are active today</h3><p>Based on your interests and usual play area.</p></div><i class="radar"></i></div>
         <div class="filters"><button class="chip active">All nearby</button><button class="chip">Football</button><button class="chip">BGMI</button><button class="chip">Badminton</button></div>
         <article class="team"><div class="team-head"><div class="team-logo">HS</div><div><h3>HSR Sunday Strikers</h3><span class="sport-name">⚽ Football · 1.8 km away</span></div><span class="open">OPEN</span></div><div class="team-details"><div class="detail"><span>Usual ground</span><b>Agara Turf</b></div><div class="detail"><span>Plays</span><b>Daily · 7 PM</b></div><div class="detail"><span>Level</span><b>Intermediate</b></div></div><div class="team-form"><span>Last 5</span><div class="form"><i class="w">W</i><i class="w">W</i><i class="l">L</i><i class="w">W</i><i class="d">D</i></div><b>3 friends here</b></div><div class="team-foot"><div class="members"><i class="face"></i><i class="face"></i><i class="face"></i><span>12 regulars</span></div><button class="small-btn action" data-message="Join request sent to HSR Sunday Strikers!">Ask to join</button></div></article>
