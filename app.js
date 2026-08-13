@@ -409,7 +409,12 @@ document.getElementById('backToEventsBtn')?.addEventListener('click', () => navi
 document.getElementById('yourTeamsList')?.addEventListener('click', async event => {
   const inviteButton = event.target.closest('[data-invite-code]');
   if (inviteButton) {
-    const url = `${location.origin}${location.pathname}?join=${encodeURIComponent(inviteButton.dataset.inviteCode)}`;
+    const inviteUrl = new URL(location.pathname, location.origin);
+    inviteUrl.searchParams.set('join', inviteButton.dataset.inviteCode);
+    inviteUrl.searchParams.set('from', inviteButton.dataset.inviter);
+    inviteUrl.searchParams.set('team', inviteButton.dataset.teamName);
+    inviteUrl.searchParams.set('sport', inviteButton.dataset.teamSport);
+    const url = inviteUrl.toString();
     const message = `${inviteButton.dataset.inviter} has invited you to join ${inviteButton.dataset.teamName}, a ${inviteButton.dataset.teamSport} team on PLAYYR.\n${url}`;
     try { await navigator.clipboard.writeText(message); toast('Invite message and link copied'); }
     catch (_) { window.prompt('Copy this team invitation', message); }
@@ -458,24 +463,32 @@ let pendingInviteHandled = false;
 let pendingInviteCode = '';
 async function handlePendingTeamInvite() {
   if (pendingInviteHandled) return;
-  const code = new URLSearchParams(location.search).get('join');
+  const inviteParams = new URLSearchParams(location.search);
+  const code = inviteParams.get('join');
   if (!code) return;
   pendingInviteCode = code;
   const { data, error } = await sb.rpc('get_team_invite_preview', { p_invite_code:code });
   const modal = document.getElementById('teamInviteModal');
   const joinButton = document.getElementById('acceptTeamInviteBtn');
-  if (error || !data?.valid) {
+  const linkPreview = {
+    inviter_name:inviteParams.get('from'),
+    team_name:inviteParams.get('team'),
+    sport:inviteParams.get('sport')
+  };
+  const hasLinkPreview = Boolean(linkPreview.inviter_name && linkPreview.team_name && linkPreview.sport);
+  const preview = data?.valid ? data : (hasLinkPreview ? { ...linkPreview, valid:true, member_count:null, max_members:null, is_full:false } : null);
+  if (!preview?.valid) {
     setText('teamInviteTitle', 'Invite unavailable');
-    setText('teamInviteMessage', data?.message || 'This team invitation is invalid or no longer available.');
+    setText('teamInviteMessage', data?.message || (error ? 'Invite details could not load. Ask the sender to copy a fresh invitation link.' : 'This team invitation is invalid or no longer available.'));
     joinButton.disabled = true;
   } else {
-    setText('inviteTeamIcon', initialsFor(data.team_name));
-    setText('teamInviteTitle', `Join ${data.team_name}`);
-    document.getElementById('teamInviteMessage').innerHTML = `<strong>${escapeHtml(data.inviter_name)}</strong> has invited you to join <strong>${escapeHtml(data.team_name)}</strong>, a ${escapeHtml(data.sport)} team on PLAYYR.`;
-    setText('inviteSport', data.sport);
-    setText('inviteCapacity', `${data.member_count}/${data.max_members} players`);
-    joinButton.disabled = Boolean(data.is_full);
-    joinButton.textContent = data.is_full ? 'Team is full' : 'Join team';
+    setText('inviteTeamIcon', initialsFor(preview.team_name));
+    setText('teamInviteTitle', `Join ${preview.team_name}`);
+    document.getElementById('teamInviteMessage').innerHTML = `<strong>${escapeHtml(preview.inviter_name)}</strong> has invited you to join <strong>${escapeHtml(preview.team_name)}</strong>, a ${escapeHtml(preview.sport)} team on PLAYYR.`;
+    setText('inviteSport', preview.sport);
+    setText('inviteCapacity', preview.member_count === null ? 'Team invite' : `${preview.member_count}/${preview.max_members} players`);
+    joinButton.disabled = Boolean(preview.is_full);
+    joinButton.textContent = preview.is_full ? 'Team is full' : 'Join team';
   }
   modal.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
