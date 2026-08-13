@@ -142,23 +142,47 @@ document.getElementById('signInTab').onclick = () => showAuthForm('signin');
 
 document.getElementById('signUpForm').onsubmit = async event => {
   event.preventDefault();
+  const form = event.currentTarget;
+  const submitButton = form.querySelector('button[type="submit"]');
+  if (submitButton.disabled) return;
   const username = document.getElementById('signUpUsername').value.trim();
-  const email = document.getElementById('signUpEmail').value.trim();
+  const email = document.getElementById('signUpEmail').value.trim().toLowerCase();
   const password = document.getElementById('signUpPassword').value;
-  const { data, error } = await sb.auth.signUp({
-    email,
-    password,
-    options: { data: { username } }
-  });
-  if (error) { toast(error.message); return; }
-  if (!data.session) {
-    toast('Check your email to confirm your account, then sign in.');
-    showAuthForm('signin');
-    return;
+  submitButton.disabled = true;
+  submitButton.textContent = 'Creating account…';
+  try {
+    await sb.auth.signOut({ scope: 'local' });
+    const { data, error } = await sb.auth.signUp({
+      email,
+      password,
+      options: { data: { username } }
+    });
+    const duplicateAccount = error && (
+      error.code === 'user_already_exists' ||
+      error.code === 'email_exists' ||
+      /already (registered|exists)/i.test(error.message)
+    );
+    const hiddenDuplicate = !error && data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0;
+    if (duplicateAccount || hiddenDuplicate) {
+      document.getElementById('signInEmail').value = email;
+      showAuthForm('signin');
+      toast('This email already has an account — please sign in');
+      return;
+    }
+    if (error) { toast(`Could not create account: ${error.message}`); return; }
+    if (!data.session) {
+      document.getElementById('signInEmail').value = email;
+      toast('Account created — check your email to confirm it, then sign in.');
+      showAuthForm('signin');
+      return;
+    }
+    document.getElementById('profileEmail').value = email;
+    profilePromptAuthorized = true;
+    openProfilePrompt();
+  } finally {
+    submitButton.disabled = false;
+    submitButton.textContent = 'Create account';
   }
-  document.getElementById('profileEmail').value = email;
-  profilePromptAuthorized = true;
-  openProfilePrompt();
 };
 
 document.getElementById('signInForm').onsubmit = async event => {
