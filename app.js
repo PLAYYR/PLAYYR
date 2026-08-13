@@ -241,6 +241,7 @@ document.getElementById('signInForm').onsubmit = async event => {
   renderRadius(data.user.user_metadata.playyr_radius_km || localStorage.getItem(`playyrRadius:${data.user.id}`));
   if (displayProfile.city && (displayProfile.sports || []).length >= 3) {
     await enterAppWithProfile(displayProfile);
+    await handlePendingTeamInvite();
     return;
   }
   if (profile) await hydrateFromProfile(displayProfile);
@@ -368,6 +369,93 @@ document.getElementById('useLocation').onclick = () => {
 
 function navigateTo(pageId) { const page = document.getElementById(pageId); if (!page) return; document.querySelectorAll('.nav button').forEach(item => item.classList.toggle('active', item.dataset.page === pageId)); document.querySelectorAll('.page').forEach(el => el.classList.add('hidden')); page.classList.remove('hidden'); window.scrollTo({top:0,behavior:'smooth'}); }
 document.querySelectorAll('.nav button').forEach(button => button.onclick = () => navigateTo(button.dataset.page));
+const escapeHtml = value => String(value || '').replace(/[&<>'"]/g, character => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' })[character]);
+const initialsFor = value => String(value || 'Player').trim().split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase() || 'PL';
+
+async function loadYourTeams() {
+  const list = document.getElementById('yourTeamsList');
+  if (!list) return;
+  list.innerHTML = '<div class="empty-teams"><strong>Loading your teams</strong><span>Getting your latest memberships...</span></div>';
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return;
+  const { data, error } = await sb.from('teams').select('id,name,sport,max_members,creator_id,invite_code,team_members(user_id,display_name,joined_at)').order('created_at', { ascending:false });
+  if (error) {
+    list.innerHTML = '<div class="empty-teams"><strong>Teams need database setup</strong><span>Run supabase/teams.sql in your Supabase SQL Editor.</span></div>';
+    return;
+  }
+  const teams = data || [];
+  if (!teams.length) {
+    list.innerHTML = '<div class="empty-teams"><strong>No teams yet</strong><span>Make your first team or join one through an invite link.</span></div>';
+    return;
+  }
+  list.innerHTML = teams.map(team => {
+    const isCreator = team.creator_id === user.id;
+    const members = team.team_members || [];
+    const rows = members.map(member => `<div class="member-row"><i>${escapeHtml(initialsFor(member.display_name))}</i><span>${escapeHtml(member.display_name || 'PLAYYR member')}${member.user_id === team.creator_id ? ' · Creator' : ''}</span>${isCreator && member.user_id !== user.id ? `<button type="button" data-remove-member="${member.user_id}" data-team-id="${team.id}">Remove</button>` : ''}</div>`).join('');
+    return `<article class="team owned-team"><div class="owned-team-summary"><div class="team-logo">${escapeHtml(initialsFor(team.name))}</div><div><h3>${escapeHtml(team.name)}</h3><p>${escapeHtml(team.sport)} · ${members.length}/${team.max_members} players</p></div>${isCreator ? '<span class="owner-pill">Creator</span>' : '<span class="owner-pill">Member</span>'}</div><div class="team-actions">${isCreator ? `<button class="small-btn" type="button" data-invite-code="${team.invite_code}">Invite people</button>` : ''}<button class="ghost" type="button" data-toggle-members="${team.id}">View members</button></div><div id="members-${team.id}" class="member-list hidden">${rows}</div></article>`;
+  }).join('');
+}
+
+async function openYourTeams() {
+  navigateTo('yourTeamsPage');
+  await loadYourTeams();
+}
+
+document.getElementById('yourTeamsBtn')?.addEventListener('click', openYourTeams);
+document.getElementById('backToEventsBtn')?.addEventListener('click', () => navigateTo('eventsPage'));
+document.getElementById('yourTeamsList')?.addEventListener('click', async event => {
+  const inviteButton = event.target.closest('[data-invite-code]');
+  if (inviteButton) {
+    const url = `${location.origin}${location.pathname}?join=${encodeURIComponent(inviteButton.dataset.inviteCode)}`;
+    try { await navigator.clipboard.writeText(url); toast('Invite link copied'); }
+    catch (_) { window.prompt('Copy this team invite link', url); }
+    return;
+  }
+  const toggleButton = event.target.closest('[data-toggle-members]');
+  if (toggleButton) {
+    document.getElementById(`members-${toggleButton.dataset.toggleMembers}`)?.classList.toggle('hidden');
+    return;
+  }
+  const removeButton = event.target.closest('[data-remove-member]');
+  if (removeButton) {
+    if (!confirm('Remove this player from the team?')) return;
+    const { error } = await sb.rpc('remove_team_member', { p_team_id:removeButton.dataset.teamId, p_user_id:removeButton.dataset.removeMember });
+    toast(error ? error.message : 'Player removed');
+    if (!error) await loadYourTeams();
+  }
+});
+
+const makeTeamModal = document.getElementById('makeTeamModal');
+function closeMakeTeam() { makeTeamModal?.classList.add('hidden'); document.body.style.overflow = ''; }
+document.getElementById('makeTeamBtn')?.addEventListener('click', () => { makeTeamModal.classList.remove('hidden'); document.body.style.overflow = 'hidden'; });
+document.getElementById('closeMakeTeam')?.addEventListener('click', closeMakeTeam);
+makeTeamModal?.addEventListener('click', event => { if (event.target === makeTeamModal) closeMakeTeam(); });
+document.getElementById('makeTeamForm')?.addEventListener('submit', async event => {
+  event.preventDefault();
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return toast('Sign in to create a team');
+  const payload = { name:document.getElementById('newTeamName').value.trim(), sport:document.getElementById('newTeamSport').value, max_members:Number(document.getElementById('newTeamMax').value), creator_id:user.id };
+  const { error } = await sb.from('teams').insert(payload);
+  if (error) return toast(error.message.includes('teams') ? 'Run the PLAYYR teams database setup first' : error.message);
+  event.target.reset();
+  closeMakeTeam();
+  toast(`${payload.name} created`);
+  await loadYourTeams();
+});
+
+let pendingInviteHandled = false;
+async function handlePendingTeamInvite() {
+  if (pendingInviteHandled) return;
+  const code = new URLSearchParams(location.search).get('join');
+  if (!code) return;
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) { showAuthForm('signin'); toast('Sign in to join the invited team'); return; }
+  pendingInviteHandled = true;
+  const { data, error } = await sb.rpc('join_team_by_invite', { p_invite_code:code });
+  if (error) toast(error.message);
+  else { toast(data === 'already_member' ? 'You are already in this team' : 'Team joined'); await openYourTeams(); }
+  history.replaceState({}, '', `${location.pathname}${location.hash}`);
+}
 const profileAvatarBtn = document.getElementById('profileAvatar');
 if (profileAvatarBtn) profileAvatarBtn.onclick = () => navigateTo('settingsPage');
 const setRadiusBtn = document.getElementById('setRadiusBtn');
@@ -606,8 +694,9 @@ function toast(message) {
   const displayProfile = withSavedOnboarding(profile, session.user);
   renderRadius(session.user.user_metadata.playyr_radius_km || localStorage.getItem(`playyrRadius:${session.user.id}`));
   if (displayProfile.city && (displayProfile.sports || []).length >= 3) {
-    enterAppWithProfile(displayProfile);
+    await enterAppWithProfile(displayProfile);
     renderStreak(session.user.user_metadata || {});
+    await handlePendingTeamInvite();
     return;
   }
   if (profile) await hydrateFromProfile(displayProfile);

@@ -326,6 +326,27 @@
       -webkit-background-clip:text;background-clip:text;color:transparent;
     }
     .section-head { display:flex;justify-content:space-between;align-items:center;gap:12px;margin:28px 0 14px; }
+    .page-title-row { display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin-bottom:20px; }
+    .page-title-row .page-title { margin-bottom:0; }
+    .teams-shortcut { flex:none;width:auto;margin:0;padding:12px 14px; }
+    .teams-toolbar { display:flex;align-items:center;justify-content:space-between;gap:12px;margin:15px 0 18px; }
+    .teams-toolbar .ghost { width:auto;margin:0;padding:11px 14px; }
+    .owned-team { padding:18px; }
+    .owned-team-summary { display:flex;align-items:center;gap:12px; }
+    .owned-team-summary .team-logo { flex:none; }
+    .owned-team-summary div:nth-child(2) { min-width:0;flex:1; }
+    .owned-team-summary h3 { font-family:var(--display);font-weight:400;text-transform:uppercase;font-size:21px;margin:0 0 4px; }
+    .owned-team-summary p { color:var(--muted);font-size:11px;margin:0; }
+    .owner-pill { padding:7px 9px;border-radius:999px;background:rgba(123,196,40,.12);color:var(--mint);font-size:9px;font-weight:900;letter-spacing:.1em;text-transform:uppercase; }
+    .team-actions { display:flex;gap:8px;margin-top:15px; }
+    .team-actions button { flex:1; }
+    .member-list { margin-top:15px;border-top:1px solid var(--stroke-soft); }
+    .member-row { display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--stroke-soft); }
+    .member-row i { width:34px;height:34px;display:grid;place-items:center;border-radius:11px;background:var(--glass-3);font-style:normal;font-weight:900;font-size:11px; }
+    .member-row span { flex:1;font-weight:700;font-size:12px; }
+    .member-row button { border:0;background:none;color:#c74b40;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.08em; }
+    .empty-teams { padding:28px 20px;text-align:center;border:1.5px dashed var(--stroke-strong);border-radius:var(--r-lg);color:var(--muted); }
+    .empty-teams strong { display:block;color:var(--ink);font-size:16px;margin-bottom:5px; }
     .section-head h2 {
       display:flex;align-items:center;gap:9px;margin:0;
       font-family:'Manrope',sans-serif;font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
@@ -879,7 +900,7 @@
       </section>
 
       <section id="eventsPage" class="page hidden">
-        <p class="greeting"><span class="cityText">Bengaluru</span> · Within <span class="radiusText">15 km</span></p><h1 class="page-title">Find your next<br>competition.</h1>
+        <p class="greeting"><span class="cityText">Bengaluru</span> · Within <span class="radiusText">15 km</span></p><div class="page-title-row"><h1 class="page-title">Find your next<br>competition.</h1><button id="yourTeamsBtn" class="small-btn teams-shortcut" type="button">Your teams</button></div>
         <div class="radius-control"><div class="radius-head"><div><strong>Event radius</strong><small>Only show tournaments within this distance</small></div><output class="radius-value radiusValue">15 km</output></div><input class="radius-slider" type="range" min="1" max="50" value="15" step="1" aria-label="Event radius in kilometres"><div class="radius-scale"><span>1 km</span><span>50 km</span></div></div>
         <button id="hostBtn" class="host" type="button">＋ List a tournament on PLAYYR</button>
         <div id="eventFilters" class="filters"><button class="chip active" data-filter="For you">For you</button><button class="chip" data-filter="Football">Football</button><button class="chip" data-filter="BGMI">BGMI</button><button class="chip" data-filter="Badminton">Badminton</button><button class="chip" data-filter="Cricket">Cricket</button></div>
@@ -887,6 +908,12 @@
         <article class="event-card" data-category="BGMI"><div class="event-cover orange"><span class="event-type">🎮 BGMI</span><span class="distance">Online · Local</span><span class="cover-status"><i class="live-dot"></i>Qualifiers live</span></div><div class="event-body"><h3>PLAYYR City Showdown</h3><div class="meta"><span>📅 21 Aug · 6:30 PM</span><span>🏆 Prize pool ₹25,000</span></div><div class="going"><i class="face"></i><i class="face"></i><i class="face"></i><span><b>+64 going</b> · 9 squads from HSR</span></div><div class="event-bottom"><span class="spots"><b>12 squad spots</b> left · ₹399</span><button class="small-btn action" data-message="Your squad registration has been started!">Register</button></div></div></article>
         <article class="event-card" data-category="Badminton"><div class="event-cover blue"><span class="event-type">🏸 BADMINTON</span><span class="distance">6.8 km</span><span class="cover-status">🤝 Partner finder on</span></div><div class="event-body"><h3>Open Doubles Night</h3><div class="meta"><span>📅 24 Aug · 5:00 PM</span><span>📍 Smash Arena, Indiranagar</span></div><div class="going"><i class="face"></i><i class="face"></i><i class="face"></i><span><b>+11 going</b> · 2 need a partner</span></div><div class="event-bottom"><span class="spots"><b>7 pair spots</b> left · ₹600</span><button class="small-btn action" data-message="You're one step closer to the court!">Register</button></div></div></article>
         <div id="eventsEmpty" class="empty-state hidden"><strong>No tournaments found</strong><span>Try another sport or list a tournament for your community.</span></div>
+      </section>
+
+      <section id="yourTeamsPage" class="page hidden">
+        <div class="teams-toolbar"><button id="backToEventsBtn" class="ghost" type="button">&#8592; Events</button><button id="makeTeamBtn" class="small-btn" type="button">+ Make team</button></div>
+        <p class="greeting">Teams you created or joined</p><h1 class="page-title">Your teams.</h1>
+        <div id="yourTeamsList"><div class="empty-teams"><strong>Loading your teams</strong><span>Getting your latest memberships...</span></div></div>
       </section>
 
       <section id="findPage" class="page hidden">
@@ -976,10 +1003,19 @@
       <p class="terms">Your listing will be reviewed before appearing in Find.</p>
     </form>
   </div>
+  <div id="makeTeamModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="makeTeamTitle">
+    <form id="makeTeamForm" class="modal">
+      <div class="modal-head"><div><span class="eyebrow">Build your squad</span><h2 id="makeTeamTitle">Make a team</h2><p>Create a team, invite players and manage your roster.</p></div><button type="button" id="closeMakeTeam" class="close" aria-label="Close">&times;</button></div>
+      <div class="field"><label for="newTeamName">TEAM NAME</label><input id="newTeamName" required maxlength="60" placeholder="e.g. HSR Sunday Strikers"></div>
+      <div class="field-row"><div class="field"><label for="newTeamSport">SPORT / GAME</label><select id="newTeamSport" required><option>Football</option><option>BGMI</option><option>Cricket</option><option>Badminton</option><option>Basketball</option><option>Free Fire</option><option>Running</option><option>Volleyball</option></select></div><div class="field"><label for="newTeamMax">MAXIMUM PLAYERS</label><input id="newTeamMax" type="number" min="2" max="100" value="11" required></div></div>
+      <button class="primary" type="submit">Create team</button>
+      <p class="terms">You will be the team creator. Only you can remove members.</p>
+    </form>
+  </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="config.js"></script>
 <script src="data.js"></script>
-<script src="app.js?v=20260813-12"></script>
+<script src="app.js?v=20260813-13"></script>
 </body>
 </html>
