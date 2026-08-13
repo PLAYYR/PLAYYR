@@ -107,6 +107,8 @@ function applyProfile(profile) {
   setText('settingsAvatar', initials);
   setText('leaderboardAvatar', initials);
   setText('settingsAccount', profile.email || 'Your PLAYYR account');
+  const settingsName = document.getElementById('settingsNameInput');
+  if (settingsName) settingsName.value = profile.full_name;
   if (profile.city) {
     document.querySelectorAll('.cityText').forEach(el => el.textContent = profile.city);
     setText('leaderboardCity', profile.city);
@@ -786,6 +788,28 @@ renderSettingsPreferences();
 bindSettingsToggles(null);
 
 const saveSettingsCity = document.getElementById('saveSettingsCity');
+const saveSettingsName = document.getElementById('saveSettingsName');
+if (saveSettingsName) saveSettingsName.onclick = async () => {
+  const input = document.getElementById('settingsNameInput');
+  const fullName = input.value.trim().replace(/\s+/g, ' ');
+  if (fullName.length < 2) return toast('Enter your full name');
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return toast('Sign in to change your name');
+  saveSettingsName.disabled = true;
+  saveSettingsName.textContent = 'Saving...';
+  const { error:profileError } = await sb.from('profiles').upsert({ id:user.id, full_name:fullName, email:user.email }, { onConflict:'id' });
+  if (!profileError) {
+    await sb.auth.updateUser({ data:{ full_name:fullName } });
+    await sb.rpc('sync_my_team_display_name', { p_full_name:fullName });
+    applyProfile({ full_name:fullName, email:user.email });
+    toast('Name updated everywhere');
+  } else {
+    toast(profileError.message || 'Could not update your name');
+  }
+  saveSettingsName.disabled = false;
+  saveSettingsName.textContent = 'Save';
+};
+
 if (saveSettingsCity) saveSettingsCity.onclick = async () => {
   const input = document.getElementById('settingsCityInput');
   const city = input.value.trim();
