@@ -14,6 +14,17 @@ const SETTINGS_MAP = {
 
 function setText(id, text) { const el = document.getElementById(id); if (el) el.textContent = text; }
 
+function withAuthIdentity(profile, user) {
+  const email = (profile && profile.email) || (user && user.email) || '';
+  const metadata = (user && user.user_metadata) || {};
+  const fallbackName = metadata.full_name || metadata.username || email.split('@')[0] || 'Player';
+  return {
+    ...(profile || {}),
+    full_name: (profile && profile.full_name && profile.full_name.trim()) || fallbackName,
+    email
+  };
+}
+
 function applyProfile(profile) {
   if (!profile || !profile.full_name) return;
   const parts = profile.full_name.trim().split(/\s+/).filter(Boolean);
@@ -120,14 +131,16 @@ document.getElementById('signInForm').onsubmit = async event => {
   const { data, error } = await sb.auth.signInWithPassword({ email, password });
   if (error) { toast('Email or password is incorrect'); return; }
   const profile = await loadProfile(data.user.id);
+  const displayProfile = withAuthIdentity(profile, data.user);
   if (profile && profile.full_name && profile.city && (profile.sports || []).length >= 3) {
-    await enterAppWithProfile(profile);
+    await enterAppWithProfile(displayProfile);
     return;
   }
-  if (profile) await hydrateFromProfile(profile);
+  if (profile) await hydrateFromProfile(displayProfile);
+  else applyProfile(displayProfile);
   authScreen.classList.add('hidden');
   document.getElementById('onboarding').classList.remove('hidden');
-  if (profile && !profile.full_name) {
+  if (!profile || !profile.full_name) {
     profileModal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
   }
@@ -341,15 +354,16 @@ function toast(message) {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) return;
   const profile = await loadProfile(session.user.id);
-  if (!profile) return;
-  if (profile.full_name && profile.city && (profile.sports || []).length >= 3) {
-    enterAppWithProfile(profile);
+  const displayProfile = withAuthIdentity(profile, session.user);
+  if (profile && profile.full_name && profile.city && (profile.sports || []).length >= 3) {
+    enterAppWithProfile(displayProfile);
     return;
   }
-  await hydrateFromProfile(profile);
+  if (profile) await hydrateFromProfile(displayProfile);
+  else applyProfile(displayProfile);
   authScreen.classList.add('hidden');
   document.getElementById('onboarding').classList.remove('hidden');
-  if (!profile.full_name) {
+  if (!profile || !profile.full_name) {
     profileModal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
   }
