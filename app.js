@@ -5,6 +5,8 @@ const selected = new Set();
 const grid = document.getElementById('sportGrid');
 const authScreen = document.getElementById('authScreen');
 const profileModal = document.getElementById('profileModal');
+const sportsKey = userId => `playyrSports:${userId}`;
+const cityKey = userId => `playyrCity:${userId}`;
 const SETTINGS_MAP = {
   discoverableSetting: 'discoverable',
   activitySetting: 'activity_visible',
@@ -25,6 +27,16 @@ function withAuthIdentity(profile, user) {
   };
 }
 
+function withSavedOnboarding(profile, user) {
+  let savedSports = [];
+  try { savedSports = JSON.parse(localStorage.getItem(sportsKey(user.id)) || '[]'); } catch (_) {}
+  return {
+    ...withAuthIdentity(profile, user),
+    sports: (profile && profile.sports && profile.sports.length) ? profile.sports : savedSports,
+    city: (profile && profile.city) || localStorage.getItem(cityKey(user.id)) || ''
+  };
+}
+
 function applyProfile(profile) {
   if (!profile || !profile.full_name) return;
   const parts = profile.full_name.trim().split(/\s+/).filter(Boolean);
@@ -36,7 +48,13 @@ function applyProfile(profile) {
   setText('settingsAvatar', initials);
   setText('leaderboardAvatar', initials);
   setText('settingsAccount', profile.email || 'Your PLAYYR account');
-  if (profile.city) { document.querySelectorAll('.cityText').forEach(el => el.textContent = profile.city); setText('leaderboardCity', profile.city); document.getElementById('cityInput').value = profile.city; }
+  if (profile.city) {
+    document.querySelectorAll('.cityText').forEach(el => el.textContent = profile.city);
+    setText('leaderboardCity', profile.city);
+    document.getElementById('cityInput').value = profile.city;
+    const settingsCity = document.getElementById('settingsCityInput');
+    if (settingsCity) settingsCity.value = profile.city;
+  }
 }
 
 function syncSportGridUI() {
@@ -49,7 +67,7 @@ function syncSportGridUI() {
 }
 
 async function loadProfile(userId) {
-  const { data, error } = await sb.from('profiles').select('*').eq('id', userId).single();
+  const { data, error } = await sb.from('profiles').select('*').eq('id', userId).maybeSingle();
   if (error) return null;
   return data;
 }
@@ -57,7 +75,9 @@ async function loadProfile(userId) {
 async function saveSports() {
   const { data: { user } } = await sb.auth.getUser();
   if (!user) return;
-  await sb.from('profiles').update({ sports: [...selected] }).eq('id', user.id);
+  const chosenSports = [...selected];
+  localStorage.setItem(sportsKey(user.id), JSON.stringify(chosenSports));
+  await sb.from('profiles').upsert({ id: user.id, sports: chosenSports }, { onConflict: 'id' });
 }
 
 function bindSettingsToggles(profile) {
@@ -131,8 +151,8 @@ document.getElementById('signInForm').onsubmit = async event => {
   const { data, error } = await sb.auth.signInWithPassword({ email, password });
   if (error) { toast('Email or password is incorrect'); return; }
   const profile = await loadProfile(data.user.id);
-  const displayProfile = withAuthIdentity(profile, data.user);
-  if (profile && profile.full_name && profile.city && (profile.sports || []).length >= 3) {
+  const displayProfile = withSavedOnboarding(profile, data.user);
+  if (displayProfile.city && (displayProfile.sports || []).length >= 3) {
     await enterAppWithProfile(displayProfile);
     return;
   }
@@ -158,7 +178,7 @@ document.getElementById('profileForm').onsubmit = async event => {
     gender: document.getElementById('profileGender').value,
     city: document.getElementById('profileCity').value.trim()
   };
-  const { data, error } = await sb.from('profiles').update(profileUpdate).eq('id', user.id).select().single();
+  const { data, error } = await sb.from('profiles').upsert({ id: user.id, ...profileUpdate }, { onConflict: 'id' }).select().single();
   if (error) { toast('Could not save profile'); return; }
   applyProfile(data);
   profileModal.classList.add('hidden');
@@ -227,7 +247,13 @@ async function enter(city = 'Bengaluru') {
   document.getElementById('onboarding').classList.add('hidden');
   document.getElementById('mainApp').classList.remove('hidden');
   const { data: { user } } = await sb.auth.getUser();
-  if (user) await sb.from('profiles').update({ sports: [...selected], city }).eq('id', user.id);
+  if (user) {
+    const chosenSports = [...selected];
+    localStorage.setItem(sportsKey(user.id), JSON.stringify(chosenSports));
+    localStorage.setItem(cityKey(user.id), city);
+    const { error } = await sb.from('profiles').upsert({ id: user.id, sports: chosenSports, city }, { onConflict: 'id' });
+    if (error) toast('Saved on this device; cloud sync will retry later');
+  }
   renderSettingsPreferences();
   renderChosenInterests();
   window.scrollTo(0, 0);
@@ -323,6 +349,21 @@ function renderSettingsPreferences() {
 renderSettingsPreferences();
 bindSettingsToggles(null);
 
+const saveSettingsCity = document.getElementById('saveSettingsCity');
+if (saveSettingsCity) saveSettingsCity.onclick = async () => {
+  const input = document.getElementById('settingsCityInput');
+  const city = input.value.trim();
+  if (!city) return toast('Enter your city or area');
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return toast('Sign in to update your location');
+  localStorage.setItem(cityKey(user.id), city);
+  document.getElementById('cityInput').value = city;
+  document.querySelectorAll('.cityText').forEach(element => element.textContent = city);
+  setText('leaderboardCity', city);
+  const { error } = await sb.from('profiles').upsert({ id: user.id, city }, { onConflict: 'id' });
+  toast(error ? 'Location saved on this device' : 'Location updated');
+};
+
 const changePasswordBtn = document.getElementById('changePasswordBtn');
 if (changePasswordBtn) changePasswordBtn.onclick = async () => {
   const { data: { user } } = await sb.auth.getUser();
@@ -354,8 +395,8 @@ function toast(message) {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) return;
   const profile = await loadProfile(session.user.id);
-  const displayProfile = withAuthIdentity(profile, session.user);
-  if (profile && profile.full_name && profile.city && (profile.sports || []).length >= 3) {
+  const displayProfile = withSavedOnboarding(profile, session.user);
+  if (displayProfile.city && (displayProfile.sports || []).length >= 3) {
     enterAppWithProfile(displayProfile);
     return;
   }
