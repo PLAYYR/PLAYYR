@@ -433,6 +433,33 @@ document.getElementById('hostForm').onsubmit = event => {
   toast(`${name} submitted — ₹99 payment initiated`);
 };
 
+const teamModal = document.getElementById('teamModal');
+const listTeamBtn = document.getElementById('listTeamBtn');
+const closeTeamBtn = document.getElementById('closeTeam');
+
+function closeTeamListing() {
+  teamModal.classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+if (listTeamBtn) listTeamBtn.onclick = () => {
+  teamModal.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+};
+if (closeTeamBtn) closeTeamBtn.onclick = closeTeamListing;
+if (teamModal) teamModal.onclick = event => {
+  if (event.target === teamModal) closeTeamListing();
+};
+
+const teamForm = document.getElementById('teamForm');
+if (teamForm) teamForm.onsubmit = event => {
+  event.preventDefault();
+  const name = document.getElementById('teamName').value.trim();
+  closeTeamListing();
+  event.target.reset();
+  toast(`${name} submitted for review`);
+};
+
 function renderSettingsPreferences() {
   const container = document.getElementById('settingsPreferences');
   if (!container) return;

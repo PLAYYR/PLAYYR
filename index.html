@@ -866,6 +866,7 @@
 
       <section id="findPage" class="page hidden">
         <p class="greeting">Teams playing near <span class="cityText">Bengaluru</span></p><h1 class="page-title">Your local<br>playground.</h1>
+        <button id="listTeamBtn" class="host" type="button">＋ List your team on PLAYYR</button>
         <div class="find-banner"><div><h3>6 crews are active today</h3><p>Based on your interests and usual play area.</p></div><i class="radar"></i></div>
         <div class="filters"><button class="chip active">All nearby</button><button class="chip">Football</button><button class="chip">BGMI</button><button class="chip">Badminton</button></div>
         <article class="team"><div class="team-head"><div class="team-logo">HS</div><div><h3>HSR Sunday Strikers</h3><span class="sport-name">⚽ Football · 1.8 km away</span></div><span class="open">OPEN</span></div><div class="team-details"><div class="detail"><span>Usual ground</span><b>Agara Turf</b></div><div class="detail"><span>Plays</span><b>Daily · 7 PM</b></div><div class="detail"><span>Level</span><b>Intermediate</b></div></div><div class="team-form"><span>Last 5</span><div class="form"><i class="w">W</i><i class="w">W</i><i class="l">L</i><i class="w">W</i><i class="d">D</i></div><b>3 friends here</b></div><div class="team-foot"><div class="members"><i class="face"></i><i class="face"></i><i class="face"></i><span>12 regulars</span></div><button class="small-btn action" data-message="Join request sent to HSR Sunday Strikers!">Ask to join</button></div></article>
@@ -936,6 +937,17 @@
       <div class="fee-box"><div><span>PLAYYR listing fee</span><small>One-time fee to publish this tournament</small></div><b>₹99</b></div>
       <button class="primary" type="submit">Pay ₹99 & publish</button>
       <p class="terms">Your tournament will be reviewed before it goes live. The ₹99 listing fee is separate from the player entry fee.</p>
+    </form>
+  </div>
+  <div id="teamModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="teamTitle">
+    <form id="teamForm" class="modal">
+      <div class="modal-head"><div><span class="eyebrow">Join Find</span><h2 id="teamTitle">List your team</h2><p>Help nearby players discover when and where your team plays.</p></div><button type="button" id="closeTeam" class="close" aria-label="Close">×</button></div>
+      <div class="field"><label for="teamName">TEAM NAME</label><input id="teamName" required placeholder="e.g. HSR Sunday Strikers"></div>
+      <div class="field-row"><div class="field"><label for="teamSport">SPORT / GAME</label><select id="teamSport" required><option>Football</option><option>BGMI</option><option>Cricket</option><option>Badminton</option><option>Basketball</option><option>Free Fire</option><option>Running</option><option>Volleyball</option></select></div><div class="field"><label for="teamLevel">PLAY LEVEL</label><select id="teamLevel" required><option>All levels</option><option>Beginner</option><option>Intermediate</option><option>Competitive</option></select></div></div>
+      <div class="field"><label for="teamVenue">GROUND, VENUE OR ONLINE ROOM</label><input id="teamVenue" required placeholder="Where does your team usually play?"></div>
+      <div class="field-row"><div class="field"><label for="teamSchedule">PLAYING SCHEDULE</label><input id="teamSchedule" required placeholder="e.g. Sundays · 7 AM"></div><div class="field"><label for="teamOpenings">OPEN SPOTS</label><input id="teamOpenings" type="number" min="0" required placeholder="e.g. 3"></div></div>
+      <button class="primary" type="submit">Submit team listing</button>
+      <p class="terms">Your listing will be reviewed before appearing in Find.</p>
     </form>
   </div>
 </div>
