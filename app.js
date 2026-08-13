@@ -374,16 +374,20 @@ function filterEvents(filter = 'For you') {
     const matches = filter === 'For you'
       ? (selected.size === 0 || selected.has(card.dataset.category))
       : card.dataset.category === filter;
+    card.hidden = !matches;
     card.classList.toggle('hidden', !matches);
+    card.setAttribute('aria-hidden', String(!matches));
     if (matches) visible += 1;
   });
   document.getElementById('eventsEmpty').classList.toggle('hidden', visible > 0);
 }
 
-if (eventFilters) eventFilters.addEventListener('click', event => {
-  const button = event.target.closest('[data-filter]');
-  if (!button) return;
-  filterEvents(button.dataset.filter);
+if (eventFilters) eventFilters.querySelectorAll('[data-filter]').forEach(button => {
+  button.onclick = () => {
+    eventFilters.querySelectorAll('[data-filter]').forEach(item => item.classList.toggle('active', item === button));
+    filterEvents(button.dataset.filter);
+    toast(`Showing ${button.textContent.toLowerCase()} events`);
+  };
 });
 filterEvents();
 
