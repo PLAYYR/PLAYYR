@@ -17,6 +17,31 @@ const SETTINGS_MAP = {
 
 function setText(id, text) { const el = document.getElementById(id); if (el) el.textContent = text; }
 
+function localDateKey(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function renderStreak(metadata = {}) {
+  const count = Math.max(0, Number(metadata.playyr_streak_count) || 0);
+  const completedToday = metadata.playyr_last_activity_date === localDateKey();
+  const streakButton = document.getElementById('streakButton');
+  const challengeButton = document.getElementById('dailyChallengeButton');
+  setText('streakCount', count);
+  setText('streakStat', count);
+  if (streakButton) streakButton.title = count ? `${count}-day activity streak` : 'Complete a daily challenge to begin your streak';
+  if (challengeButton) {
+    challengeButton.dataset.started = completedToday ? 'completed' : 'false';
+    challengeButton.textContent = completedToday ? 'Completed today' : 'Start now';
+    challengeButton.disabled = completedToday;
+  }
+  const trophy = document.getElementById('streakTrophy');
+  if (trophy) trophy.classList.toggle('locked', count < 30);
+  setText('streakTrophyStatus', count >= 30 ? 'Unlocked' : `${count}/30 days`);
+}
+
 function closeProfilePrompt() {
   profileModal.classList.add('hidden');
   document.body.style.overflow = '';
@@ -193,6 +218,7 @@ document.getElementById('signInForm').onsubmit = async event => {
   if (error) { toast('Email or password is incorrect'); return; }
   const profile = await loadProfile(data.user.id);
   const displayProfile = withSavedOnboarding(profile, data.user);
+  renderStreak(data.user.user_metadata || {});
   if (displayProfile.city && (displayProfile.sports || []).length >= 3) {
     await enterAppWithProfile(displayProfile);
     return;
@@ -338,6 +364,51 @@ document.querySelectorAll('.action').forEach(button => {
   button.onclick = () => toast(button.dataset.message);
 });
 
+const streakButton = document.getElementById('streakButton');
+if (streakButton) streakButton.onclick = () => {
+  const count = document.getElementById('streakCount').textContent;
+  toast(Number(count) ? `${count}-day streak — complete today's challenge to keep it going` : 'Complete today’s challenge to start your streak');
+};
+
+const dailyChallengeButton = document.getElementById('dailyChallengeButton');
+if (dailyChallengeButton) dailyChallengeButton.onclick = async () => {
+  if (dailyChallengeButton.dataset.started !== 'true') {
+    dailyChallengeButton.dataset.started = 'true';
+    dailyChallengeButton.textContent = 'Mark complete';
+    toast('Challenge started — mark it complete when you finish');
+    return;
+  }
+  dailyChallengeButton.disabled = true;
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) {
+    dailyChallengeButton.disabled = false;
+    return toast('Sign in to record your streak');
+  }
+  const metadata = user.user_metadata || {};
+  const today = localDateKey();
+  if (metadata.playyr_last_activity_date === today) {
+    renderStreak(metadata);
+    return toast('Today’s activity is already counted');
+  }
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const continued = metadata.playyr_last_activity_date === localDateKey(yesterday);
+  const nextCount = continued ? (Number(metadata.playyr_streak_count) || 0) + 1 : 1;
+  const streakUpdate = {
+    playyr_streak_count: nextCount,
+    playyr_last_activity_date: today
+  };
+  const nextMetadata = { ...metadata, ...streakUpdate };
+  const { error } = await sb.auth.updateUser({ data: streakUpdate });
+  if (error) {
+    dailyChallengeButton.disabled = false;
+    dailyChallengeButton.textContent = 'Mark complete';
+    return toast('Could not save your activity — try again');
+  }
+  renderStreak(nextMetadata);
+  toast(nextCount === 1 ? 'Your streak has started!' : `${nextCount}-day streak — keep it going!`);
+};
+
 const hostModal = document.getElementById('hostModal');
 document.getElementById('hostBtn').onclick = () => {
   hostModal.classList.remove('hidden');
@@ -440,6 +511,7 @@ function toast(message) {
   const displayProfile = withSavedOnboarding(profile, session.user);
   if (displayProfile.city && (displayProfile.sports || []).length >= 3) {
     enterAppWithProfile(displayProfile);
+    renderStreak(session.user.user_metadata || {});
     return;
   }
   if (profile) await hydrateFromProfile(displayProfile);
@@ -447,4 +519,5 @@ function toast(message) {
   closeProfilePrompt();
   authScreen.classList.add('hidden');
   document.getElementById('onboarding').classList.remove('hidden');
+  renderStreak(session.user.user_metadata || {});
 })();
