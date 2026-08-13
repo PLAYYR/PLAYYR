@@ -5,6 +5,7 @@ const selected = new Set();
 const grid = document.getElementById('sportGrid');
 const authScreen = document.getElementById('authScreen');
 const profileModal = document.getElementById('profileModal');
+let profilePromptAuthorized = false;
 const sportsKey = userId => `playyrSports:${userId}`;
 const cityKey = userId => `playyrCity:${userId}`;
 const SETTINGS_MAP = {
@@ -15,6 +16,22 @@ const SETTINGS_MAP = {
 };
 
 function setText(id, text) { const el = document.getElementById(id); if (el) el.textContent = text; }
+
+function closeProfilePrompt() {
+  profileModal.classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+function openProfilePrompt() {
+  if (!profilePromptAuthorized) return;
+  profileModal.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+closeProfilePrompt();
+window.addEventListener('pageshow', () => {
+  if (!profilePromptAuthorized) closeProfilePrompt();
+});
 
 function withAuthIdentity(profile, user) {
   const email = (profile && profile.email) || (user && user.email) || '';
@@ -140,8 +157,8 @@ document.getElementById('signUpForm').onsubmit = async event => {
     return;
   }
   document.getElementById('profileEmail').value = email;
-  profileModal.classList.remove('hidden');
-  document.body.style.overflow = 'hidden';
+  profilePromptAuthorized = true;
+  openProfilePrompt();
 };
 
 document.getElementById('signInForm').onsubmit = async event => {
@@ -161,8 +178,8 @@ document.getElementById('signInForm').onsubmit = async event => {
   authScreen.classList.add('hidden');
   document.getElementById('onboarding').classList.remove('hidden');
   if (!profile || !profile.full_name) {
-    profileModal.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
+    profilePromptAuthorized = true;
+    openProfilePrompt();
   }
 };
 
@@ -181,7 +198,8 @@ document.getElementById('profileForm').onsubmit = async event => {
   const { data, error } = await sb.from('profiles').upsert({ id: user.id, ...profileUpdate }, { onConflict: 'id' }).select().single();
   if (error) { toast('Could not save profile'); return; }
   applyProfile(data);
-  profileModal.classList.add('hidden');
+  profilePromptAuthorized = false;
+  closeProfilePrompt();
   authScreen.classList.add('hidden');
   document.getElementById('onboarding').classList.remove('hidden');
   document.body.style.overflow = '';
@@ -375,6 +393,8 @@ if (changePasswordBtn) changePasswordBtn.onclick = async () => {
 const signOutBtn = document.getElementById('signOutBtn');
 if (signOutBtn) signOutBtn.onclick = async () => {
   await sb.auth.signOut();
+  profilePromptAuthorized = false;
+  closeProfilePrompt();
   selected.clear();
   document.getElementById('mainApp').classList.add('hidden');
   authScreen.classList.remove('hidden');
