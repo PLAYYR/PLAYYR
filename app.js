@@ -1,5 +1,6 @@
 const { sports } = window.PLAYYR_DATA;
 const sb = window.supabaseClient;
+const sportIcons = Object.fromEntries(sports.map(([icon, name]) => [name, icon]));
 
 const selected = new Set();
 const grid = document.getElementById('sportGrid');
@@ -527,17 +528,74 @@ document.getElementById('declineTeamInviteBtn')?.addEventListener('click', () =>
 
 const registerTeamModal = document.getElementById('registerTeamModal');
 const registrationTeamSelect = document.getElementById('registrationTeamSelect');
+const registrationTeamPicker = document.getElementById('registrationTeamPicker');
+const registrationTeamTrigger = document.getElementById('registrationTeamTrigger');
+const registrationTeamMenu = document.getElementById('registrationTeamMenu');
+const registrationTeamLabel = document.getElementById('registrationTeamLabel');
+const registrationTeamSport = document.getElementById('registrationTeamSport');
 const registrationEligibility = document.getElementById('registrationEligibility');
 const payAndRegisterBtn = document.getElementById('payAndRegisterBtn');
 let selectedTournament = null;
 let selectedTeamEligible = false;
 
 function closeTeamRegistration() {
+  closeRegistrationTeamPicker();
   registerTeamModal?.classList.add('hidden');
   document.body.style.overflow = '';
   selectedTournament = null;
   selectedTeamEligible = false;
 }
+
+function closeRegistrationTeamPicker() {
+  registrationTeamPicker?.classList.remove('open');
+  registrationTeamMenu?.classList.add('hidden');
+  registrationTeamTrigger?.setAttribute('aria-expanded', 'false');
+}
+
+function openRegistrationTeamPicker() {
+  if (!registrationTeamMenu?.children.length) return;
+  registrationTeamPicker?.classList.add('open');
+  registrationTeamMenu.classList.remove('hidden');
+  registrationTeamTrigger?.setAttribute('aria-expanded', 'true');
+}
+
+function renderRegistrationTeamPicker(teams = []) {
+  registrationTeamMenu.innerHTML = '';
+  registrationTeamLabel.textContent = 'Choose your team';
+  registrationTeamSport.textContent = teams.length ? `${teams.length} ${teams.length === 1 ? 'team' : 'teams'} available` : 'No teams available';
+  teams.forEach(team => {
+    const option = document.createElement('button');
+    option.type = 'button';
+    option.className = 'team-picker-option';
+    option.dataset.teamId = team.id;
+    option.setAttribute('role', 'option');
+    option.innerHTML = `<i class="team-option-icon" aria-hidden="true">${sportIcons[team.sport] || '&#127942;'}</i><span><strong>${escapeHtml(team.name)}</strong><small>${escapeHtml(team.sport)} team</small></span><b class="team-picker-check" aria-hidden="true"></b>`;
+    option.addEventListener('click', () => {
+      registrationTeamSelect.value = team.id;
+      registrationTeamLabel.textContent = team.name;
+      registrationTeamSport.textContent = `${team.sport} team`;
+      registrationTeamMenu.querySelectorAll('.team-picker-option').forEach(item => {
+        const selected = item === option;
+        item.classList.toggle('selected', selected);
+        item.setAttribute('aria-selected', String(selected));
+        item.querySelector('.team-picker-check').textContent = selected ? '\u2713' : '';
+      });
+      closeRegistrationTeamPicker();
+      registrationTeamSelect.dispatchEvent(new Event('change', { bubbles:true }));
+    });
+    registrationTeamMenu.appendChild(option);
+  });
+}
+
+registrationTeamTrigger?.addEventListener('click', () => {
+  registrationTeamPicker?.classList.contains('open') ? closeRegistrationTeamPicker() : openRegistrationTeamPicker();
+});
+document.addEventListener('click', event => {
+  if (!registrationTeamPicker?.contains(event.target)) closeRegistrationTeamPicker();
+});
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape') closeRegistrationTeamPicker();
+});
 
 async function openTeamRegistration(card) {
   const { data: { user } } = await sb.auth.getUser();
@@ -550,6 +608,7 @@ async function openTeamRegistration(card) {
   setText('registerTournamentName', selectedTournament.name);
   setText('registrationFee', `₹${selectedTournament.fee.toLocaleString('en-IN')}`);
   registrationTeamSelect.innerHTML = '<option value="">Choose a team</option>';
+  renderRegistrationTeamPicker([]);
   registrationEligibility.className = 'eligibility-box';
   registrationEligibility.textContent = 'Select a team to check its sport, age and gender eligibility.';
   payAndRegisterBtn.disabled = true;
@@ -561,6 +620,7 @@ async function openTeamRegistration(card) {
     option.textContent = `${team.name} · ${team.sport}`;
     registrationTeamSelect.appendChild(option);
   });
+  renderRegistrationTeamPicker(data || []);
   if (!data?.length) {
     registrationEligibility.className = 'eligibility-box error';
     registrationEligibility.textContent = 'Create a team first. Only a team creator can register their team.';

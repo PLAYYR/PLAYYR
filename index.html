@@ -357,6 +357,34 @@
     .registration-fee { margin:14px 0 16px;display:flex;align-items:center;justify-content:space-between;padding:16px;border-radius:var(--r-md);background:linear-gradient(135deg,rgba(200,255,69,.2),rgba(123,196,40,.05));border:1px solid rgba(123,196,40,.3); }
     .registration-fee span { color:var(--muted);font-size:11px; }
     .registration-fee b { font-family:var(--display);font-size:27px;color:var(--mint); }
+    .team-picker { position:relative; }
+    .team-picker-native { position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important; }
+    .team-picker-trigger {
+      width:100%;min-height:66px;padding:12px 14px;border:1.5px solid var(--stroke);border-radius:18px;
+      display:flex;align-items:center;gap:12px;text-align:left;color:var(--ink);background:linear-gradient(145deg,#fff,var(--bg));
+      box-shadow:var(--sheen),0 8px 22px rgba(15,21,15,.06);transition:border-color .2s,box-shadow .2s,transform .2s;
+    }
+    .team-picker-trigger:hover,.team-picker.open .team-picker-trigger { border-color:rgba(123,196,40,.7);box-shadow:0 0 0 4px rgba(123,196,40,.12),0 10px 26px rgba(15,21,15,.08); }
+    .team-picker-trigger:active { transform:scale(.99); }
+    .team-picker-mark { width:42px;height:42px;flex:0 0 42px;border-radius:14px;display:grid;place-items:center;font-size:20px;background:linear-gradient(145deg,#e5ff86,#a8ef38);box-shadow:0 7px 18px rgba(123,196,40,.22); }
+    .team-picker-copy { min-width:0;flex:1;display:flex;flex-direction:column;gap:2px; }
+    .team-picker-copy strong { overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;letter-spacing:-.01em; }
+    .team-picker-copy small { color:var(--muted);font-size:10px; }
+    .team-picker-chevron { width:10px;height:10px;margin-right:5px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg) translateY(-3px);transition:transform .2s; }
+    .team-picker.open .team-picker-chevron { transform:rotate(225deg) translate(-2px,-2px); }
+    .team-picker-menu {
+      position:absolute;z-index:30;top:calc(100% + 8px);left:0;right:0;padding:7px;border:1.5px solid rgba(15,21,15,.12);border-radius:20px;
+      background:#fff;box-shadow:0 22px 50px rgba(15,21,15,.18),var(--sheen);animation:pickerIn .18s ease both;
+    }
+    @keyframes pickerIn { from { opacity:0;transform:translateY(-5px) scale(.985); } }
+    .team-picker-option { width:100%;border:0;border-radius:14px;padding:11px;display:flex;align-items:center;gap:11px;text-align:left;background:transparent;color:var(--ink);transition:background .18s,transform .18s; }
+    .team-picker-option:hover,.team-picker-option:focus-visible { outline:0;background:rgba(123,196,40,.1); }
+    .team-picker-option.selected { background:linear-gradient(135deg,rgba(226,255,124,.52),rgba(168,239,56,.18)); }
+    .team-option-icon { width:36px;height:36px;flex:0 0 36px;border-radius:12px;display:grid;place-items:center;background:var(--glass-3);font-size:17px; }
+    .team-picker-option span { min-width:0;display:flex;flex-direction:column; }
+    .team-picker-option strong { overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px; }
+    .team-picker-option small { color:var(--muted);font-size:10px;margin-top:2px; }
+    .team-picker-check { margin-left:auto;color:var(--lime);font-size:18px;font-weight:900; }
     .invite-card { text-align:center; }
     .invite-team-icon { width:76px;height:76px;margin:2px auto 18px;display:grid;place-items:center;border-radius:25px;background:linear-gradient(145deg,#e3ff7d,#a5e83e);font-family:var(--display);font-size:28px;color:#132010;box-shadow:0 18px 42px rgba(168,239,56,.3),inset 0 1px 0 rgba(255,255,255,.75); }
     .invite-card h2 { font-family:var(--display);font-size:33px;font-weight:400;text-transform:uppercase;line-height:.95;margin:0 0 12px; }
@@ -1033,7 +1061,7 @@
   <div id="registerTeamModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="registerTeamTitle">
     <form id="registerTeamForm" class="modal">
       <div class="modal-head"><div><span class="eyebrow">Tournament entry</span><h2 id="registerTeamTitle">Register your team</h2><p id="registerTournamentName">Choose the team you want to enter.</p></div><button type="button" id="closeRegisterTeam" class="close" aria-label="Close">&times;</button></div>
-      <div class="field"><label for="registrationTeamSelect">YOUR TEAM</label><select id="registrationTeamSelect" required><option value="">Choose a team</option></select></div>
+      <div class="field"><label for="registrationTeamPicker">YOUR TEAM</label><div id="registrationTeamPicker" class="team-picker"><select id="registrationTeamSelect" class="team-picker-native" required tabindex="-1" aria-hidden="true"><option value="">Choose a team</option></select><button id="registrationTeamTrigger" class="team-picker-trigger" type="button" aria-haspopup="listbox" aria-expanded="false"><span class="team-picker-mark" aria-hidden="true">&#128101;</span><span class="team-picker-copy"><strong id="registrationTeamLabel">Choose your team</strong><small id="registrationTeamSport">Tap to view eligible squads</small></span><i class="team-picker-chevron" aria-hidden="true"></i></button><div id="registrationTeamMenu" class="team-picker-menu hidden" role="listbox" aria-label="Your teams"></div></div></div>
       <div id="registrationEligibility" class="eligibility-box">Select a team to check its sport, age and gender eligibility.</div>
       <div class="registration-fee"><span>Tournament registration fee</span><b id="registrationFee">₹0</b></div>
       <button id="payAndRegisterBtn" class="primary" type="submit" disabled>Pay & register team</button>
@@ -1055,6 +1083,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="config.js"></script>
 <script src="data.js"></script>
-<script src="app.js?v=20260814-19"></script>
+<script src="app.js?v=20260814-20"></script>
 </body>
 </html>
