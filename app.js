@@ -13,6 +13,7 @@ function applyProfile(profile) {
   const initials = parts.slice(0, 2).map(part => part[0]).join('').toUpperCase() || 'PL';
   setText('homeGreeting', `Good evening, ${parts[0] || 'Player'} 👋`);
   setText('profileDisplayName', profile.name);
+  setText('profilePageName', profile.name);
   setText('profileAvatar', initials);
   setText('settingsAvatar', initials);
   setText('settingsAccount', profile.email || 'Your PLAYYR account');
@@ -201,7 +202,7 @@ document.getElementById('hostForm').onsubmit = event => {
   toast(`${name} submitted — ₹49 payment initiated`);
 };
 
-function renderSettingsPreferences() { const container=document.getElementById('settingsPreferences'); if(!container) return; container.innerHTML=''; sports.forEach(([icon,name])=>{ const button=document.createElement('button'); button.type='button'; button.className=`preference${selected.has(name)?' selected':''}`; button.textContent=`${icon} ${name}`; button.onclick=()=>{ if(selected.has(name)){if(selected.size<=3)return toast('Keep at least 3 sports selected');selected.delete(name)}else{if(selected.size>=4)return toast('Choose up to 4 sports');selected.add(name)} localStorage.setItem('playyrPreferences',JSON.stringify([...selected]));renderSettingsPreferences();toast('Sports preferences updated')};container.appendChild(button)}); }
+function renderSettingsPreferences() { const container=document.getElementById('settingsPreferences'); if(!container) return; container.innerHTML=''; sports.forEach(([icon,name])=>{ const button=document.createElement('button'); button.type='button'; button.className=`preference${selected.has(name)?' selected':''}`; button.textContent=`${icon} ${name}`; button.onclick=()=>{ if(selected.has(name)){if(selected.size<=3)return toast('Keep at least 3 sports selected');selected.delete(name)}else{if(selected.size>=4)return toast('Choose up to 4 sports');selected.add(name)} localStorage.setItem('playyrPreferences',JSON.stringify([...selected]));renderSettingsPreferences();renderChosenInterests();toast('Sports preferences updated')};container.appendChild(button)}); }
 JSON.parse(localStorage.getItem('playyrPreferences')||'[]').forEach(name=>selected.add(name));
 renderSettingsPreferences();
 ['discoverableSetting','activitySetting','locationSetting','alertsSetting'].forEach(id=>{const control=document.getElementById(id);if(!control)return;const saved=localStorage.getItem(`playyr-${id}`);if(saved!==null)control.checked=saved==='true';control.onchange=()=>{localStorage.setItem(`playyr-${id}`,control.checked);toast('Setting saved')}});
