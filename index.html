@@ -351,6 +351,12 @@
     .member-row button { border:0;background:none;color:#c74b40;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.08em; }
     .empty-teams { padding:28px 20px;text-align:center;border:1.5px dashed var(--stroke-strong);border-radius:var(--r-lg);color:var(--muted); }
     .empty-teams strong { display:block;color:var(--ink);font-size:16px;margin-bottom:5px; }
+    .eligibility-box { margin:14px 0;padding:14px;border-radius:var(--r-md);font-size:11px;line-height:1.5;background:var(--glass-3);border:1px solid var(--stroke);color:var(--muted); }
+    .eligibility-box.ok { color:#315f16;background:rgba(123,196,40,.1);border-color:rgba(123,196,40,.35); }
+    .eligibility-box.error { color:#a33f35;background:rgba(220,75,61,.08);border-color:rgba(220,75,61,.25); }
+    .registration-fee { margin:14px 0 16px;display:flex;align-items:center;justify-content:space-between;padding:16px;border-radius:var(--r-md);background:linear-gradient(135deg,rgba(200,255,69,.2),rgba(123,196,40,.05));border:1px solid rgba(123,196,40,.3); }
+    .registration-fee span { color:var(--muted);font-size:11px; }
+    .registration-fee b { font-family:var(--display);font-size:27px;color:var(--mint); }
     .section-head h2 {
       display:flex;align-items:center;gap:9px;margin:0;
       font-family:'Manrope',sans-serif;font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
@@ -908,9 +914,9 @@
         <div class="radius-control"><div class="radius-head"><div><strong>Event radius</strong><small>Only show tournaments within this distance</small></div><output class="radius-value radiusValue">15 km</output></div><input class="radius-slider" type="range" min="1" max="50" value="15" step="1" aria-label="Event radius in kilometres"><div class="radius-scale"><span>1 km</span><span>50 km</span></div></div>
         <button id="hostBtn" class="host" type="button">＋ List a tournament on PLAYYR</button>
         <div id="eventFilters" class="filters"><button class="chip active" data-filter="For you">For you</button><button class="chip" data-filter="Football">Football</button><button class="chip" data-filter="BGMI">BGMI</button><button class="chip" data-filter="Badminton">Badminton</button><button class="chip" data-filter="Cricket">Cricket</button></div>
-        <article class="event-card" data-category="Football"><div class="event-cover"><span class="event-type">⚽ FOOTBALL</span><span class="distance">3.2 km</span><span class="cover-status hot">🔥 Filling fast</span></div><div class="event-body"><h3>Sunday 5-a-side Cup</h3><div class="meta"><span>📅 18 Aug · 7:00 AM</span><span>📍 Turf Park, HSR</span></div><div class="going"><i class="face"></i><i class="face"></i><i class="face"></i><span><b>+18 going</b> · 4 from your crew</span></div><div class="event-bottom"><span class="spots"><b>3 team spots</b> left · ₹1,200/team</span><button class="small-btn action" data-message="Registration saved — organizer details are ready!">Register</button></div></div></article>
-        <article class="event-card" data-category="BGMI"><div class="event-cover orange"><span class="event-type">🎮 BGMI</span><span class="distance">Online · Local</span><span class="cover-status"><i class="live-dot"></i>Qualifiers live</span></div><div class="event-body"><h3>PLAYYR City Showdown</h3><div class="meta"><span>📅 21 Aug · 6:30 PM</span><span>🏆 Prize pool ₹25,000</span></div><div class="going"><i class="face"></i><i class="face"></i><i class="face"></i><span><b>+64 going</b> · 9 squads from HSR</span></div><div class="event-bottom"><span class="spots"><b>12 squad spots</b> left · ₹399</span><button class="small-btn action" data-message="Your squad registration has been started!">Register</button></div></div></article>
-        <article class="event-card" data-category="Badminton"><div class="event-cover blue"><span class="event-type">🏸 BADMINTON</span><span class="distance">6.8 km</span><span class="cover-status">🤝 Partner finder on</span></div><div class="event-body"><h3>Open Doubles Night</h3><div class="meta"><span>📅 24 Aug · 5:00 PM</span><span>📍 Smash Arena, Indiranagar</span></div><div class="going"><i class="face"></i><i class="face"></i><i class="face"></i><span><b>+11 going</b> · 2 need a partner</span></div><div class="event-bottom"><span class="spots"><b>7 pair spots</b> left · ₹600</span><button class="small-btn action" data-message="You're one step closer to the court!">Register</button></div></div></article>
+        <article class="event-card" data-category="Football" data-tournament="sunday-five-a-side" data-fee="1200"><div class="event-cover"><span class="event-type">⚽ FOOTBALL</span><span class="distance">3.2 km</span><span class="cover-status hot">🔥 Filling fast</span></div><div class="event-body"><h3>Sunday 5-a-side Cup</h3><div class="meta"><span>📅 18 Aug · 7:00 AM</span><span>📍 Turf Park, HSR</span></div><div class="going"><i class="face"></i><i class="face"></i><i class="face"></i><span><b>+18 going</b> · 4 from your crew</span></div><div class="event-bottom"><span class="spots"><b>3 team spots</b> left · ₹1,200/team</span><button class="small-btn register-team-btn" type="button">Register team</button></div></div></article>
+        <article class="event-card" data-category="BGMI" data-tournament="playyr-city-showdown" data-fee="399"><div class="event-cover orange"><span class="event-type">🎮 BGMI</span><span class="distance">Online · Local</span><span class="cover-status"><i class="live-dot"></i>Qualifiers live</span></div><div class="event-body"><h3>PLAYYR City Showdown</h3><div class="meta"><span>📅 21 Aug · 6:30 PM</span><span>🏆 Prize pool ₹25,000</span></div><div class="going"><i class="face"></i><i class="face"></i><i class="face"></i><span><b>+64 going</b> · 9 squads from HSR</span></div><div class="event-bottom"><span class="spots"><b>12 squad spots</b> left · ₹399</span><button class="small-btn register-team-btn" type="button">Register team</button></div></div></article>
+        <article class="event-card" data-category="Badminton" data-tournament="open-doubles-night" data-fee="600"><div class="event-cover blue"><span class="event-type">🏸 BADMINTON</span><span class="distance">6.8 km</span><span class="cover-status">🤝 Partner finder on</span></div><div class="event-body"><h3>Open Doubles Night</h3><div class="meta"><span>📅 24 Aug · 5:00 PM</span><span>📍 Smash Arena, Indiranagar</span></div><div class="going"><i class="face"></i><i class="face"></i><i class="face"></i><span><b>+11 going</b> · 2 need a partner</span></div><div class="event-bottom"><span class="spots"><b>7 pair spots</b> left · ₹600</span><button class="small-btn register-team-btn" type="button">Register team</button></div></div></article>
         <div id="eventsEmpty" class="empty-state hidden"><strong>No tournaments found</strong><span>Try another sport or list a tournament for your community.</span></div>
       </section>
 
@@ -1016,10 +1022,20 @@
       <p class="terms">You will be the team creator. Only you can remove members.</p>
     </form>
   </div>
+  <div id="registerTeamModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="registerTeamTitle">
+    <form id="registerTeamForm" class="modal">
+      <div class="modal-head"><div><span class="eyebrow">Tournament entry</span><h2 id="registerTeamTitle">Register your team</h2><p id="registerTournamentName">Choose the team you want to enter.</p></div><button type="button" id="closeRegisterTeam" class="close" aria-label="Close">&times;</button></div>
+      <div class="field"><label for="registrationTeamSelect">YOUR TEAM</label><select id="registrationTeamSelect" required><option value="">Choose a team</option></select></div>
+      <div id="registrationEligibility" class="eligibility-box">Select a team to check its sport, age and gender eligibility.</div>
+      <div class="registration-fee"><span>Tournament registration fee</span><b id="registrationFee">₹0</b></div>
+      <button id="payAndRegisterBtn" class="primary" type="submit" disabled>Pay & register team</button>
+      <p class="terms">Registration is confirmed only after the tournament fee is paid successfully.</p>
+    </form>
+  </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="config.js"></script>
 <script src="data.js"></script>
-<script src="app.js?v=20260813-14"></script>
+<script src="app.js?v=20260813-15"></script>
 </body>
 </html>

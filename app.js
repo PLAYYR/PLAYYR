@@ -456,6 +456,95 @@ async function handlePendingTeamInvite() {
   else { toast(data === 'already_member' ? 'You are already in this team' : 'Team joined'); await openYourTeams(); }
   history.replaceState({}, '', `${location.pathname}${location.hash}`);
 }
+
+const registerTeamModal = document.getElementById('registerTeamModal');
+const registrationTeamSelect = document.getElementById('registrationTeamSelect');
+const registrationEligibility = document.getElementById('registrationEligibility');
+const payAndRegisterBtn = document.getElementById('payAndRegisterBtn');
+let selectedTournament = null;
+let selectedTeamEligible = false;
+
+function closeTeamRegistration() {
+  registerTeamModal?.classList.add('hidden');
+  document.body.style.overflow = '';
+  selectedTournament = null;
+  selectedTeamEligible = false;
+}
+
+async function openTeamRegistration(card) {
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return toast('Sign in to register a team');
+  selectedTournament = {
+    key:card.dataset.tournament,
+    name:card.querySelector('h3')?.textContent || 'Tournament',
+    fee:Number(card.dataset.fee) || 0
+  };
+  setText('registerTournamentName', selectedTournament.name);
+  setText('registrationFee', `₹${selectedTournament.fee.toLocaleString('en-IN')}`);
+  registrationTeamSelect.innerHTML = '<option value="">Choose a team</option>';
+  registrationEligibility.className = 'eligibility-box';
+  registrationEligibility.textContent = 'Select a team to check its sport, age and gender eligibility.';
+  payAndRegisterBtn.disabled = true;
+  const { data, error } = await sb.from('teams').select('id,name,sport').eq('creator_id', user.id).order('name');
+  if (error) return toast('Run the tournament registration database setup first');
+  (data || []).forEach(team => {
+    const option = document.createElement('option');
+    option.value = team.id;
+    option.textContent = `${team.name} · ${team.sport}`;
+    registrationTeamSelect.appendChild(option);
+  });
+  if (!data?.length) {
+    registrationEligibility.className = 'eligibility-box error';
+    registrationEligibility.textContent = 'Create a team first. Only a team creator can register their team.';
+  }
+  registerTeamModal.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+document.querySelectorAll('.register-team-btn').forEach(button => {
+  button.addEventListener('click', () => openTeamRegistration(button.closest('.event-card')));
+});
+document.getElementById('closeRegisterTeam')?.addEventListener('click', closeTeamRegistration);
+registerTeamModal?.addEventListener('click', event => { if (event.target === registerTeamModal) closeTeamRegistration(); });
+
+registrationTeamSelect?.addEventListener('change', async () => {
+  selectedTeamEligible = false;
+  payAndRegisterBtn.disabled = true;
+  if (!registrationTeamSelect.value || !selectedTournament) {
+    registrationEligibility.className = 'eligibility-box';
+    registrationEligibility.textContent = 'Select a team to check its sport, age and gender eligibility.';
+    return;
+  }
+  registrationEligibility.className = 'eligibility-box';
+  registrationEligibility.textContent = 'Checking every team member...';
+  const { data, error } = await sb.rpc('check_team_tournament_eligibility', { p_team_id:registrationTeamSelect.value, p_tournament_key:selectedTournament.key });
+  if (error) {
+    registrationEligibility.className = 'eligibility-box error';
+    registrationEligibility.textContent = error.message;
+    return;
+  }
+  selectedTeamEligible = Boolean(data?.eligible);
+  registrationEligibility.className = `eligibility-box ${selectedTeamEligible ? 'ok' : 'error'}`;
+  registrationEligibility.textContent = data?.message || (selectedTeamEligible ? 'Your team is eligible.' : 'This team is not eligible.');
+  payAndRegisterBtn.disabled = !selectedTeamEligible;
+});
+
+document.getElementById('registerTeamForm')?.addEventListener('submit', async event => {
+  event.preventDefault();
+  if (!selectedTeamEligible || !selectedTournament) return;
+  if (!confirm(`Pay ₹${selectedTournament.fee.toLocaleString('en-IN')} and register this team?`)) return;
+  payAndRegisterBtn.disabled = true;
+  payAndRegisterBtn.textContent = 'Processing payment...';
+  const paymentReference = `playyr-${Date.now()}-${crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2)}`;
+  const { data, error } = await sb.rpc('register_team_for_tournament', { p_team_id:registrationTeamSelect.value, p_tournament_key:selectedTournament.key, p_payment_reference:paymentReference });
+  payAndRegisterBtn.textContent = 'Pay & register team';
+  if (error) {
+    payAndRegisterBtn.disabled = false;
+    return toast(error.message);
+  }
+  closeTeamRegistration();
+  toast(data?.message || 'Payment successful — your team is registered');
+});
 const profileAvatarBtn = document.getElementById('profileAvatar');
 if (profileAvatarBtn) profileAvatarBtn.onclick = () => navigateTo('settingsPage');
 const setRadiusBtn = document.getElementById('setRadiusBtn');
