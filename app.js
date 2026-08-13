@@ -16,8 +16,9 @@ function applyProfile(profile) {
   setText('profilePageName', profile.name);
   setText('profileAvatar', initials);
   setText('settingsAvatar', initials);
+  setText('leaderboardAvatar', initials);
   setText('settingsAccount', profile.email || 'Your PLAYYR account');
-  if (profile.city) { document.querySelectorAll('.cityText').forEach(el => el.textContent = profile.city); document.getElementById('cityInput').value = profile.city; }
+  if (profile.city) { document.querySelectorAll('.cityText').forEach(el => el.textContent = profile.city); setText('leaderboardCity', profile.city); document.getElementById('cityInput').value = profile.city; }
 }
 
 function showAuthForm(mode) {
