@@ -5,7 +5,6 @@ const selected = new Set();
 const grid = document.getElementById('sportGrid');
 const authScreen = document.getElementById('authScreen');
 const profileModal = document.getElementById('profileModal');
-
 const SETTINGS_MAP = {
   discoverableSetting: 'discoverable',
   activitySetting: 'activity_visible',
