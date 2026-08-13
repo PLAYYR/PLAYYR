@@ -430,7 +430,7 @@ document.getElementById('hostForm').onsubmit = event => {
   const name = document.getElementById('tournamentName').value;
   closeHost();
   event.target.reset();
-  toast(`${name} submitted — ₹49 payment initiated`);
+  toast(`${name} submitted — ₹99 payment initiated`);
 };
 
 function renderSettingsPreferences() {
