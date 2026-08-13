@@ -395,17 +395,16 @@ function toast(message) {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) return;
   const profile = await loadProfile(session.user.id);
+  if (!profile || !profile.full_name) {
+    await sb.auth.signOut();
+    return;
+  }
   const displayProfile = withSavedOnboarding(profile, session.user);
   if (displayProfile.city && (displayProfile.sports || []).length >= 3) {
     enterAppWithProfile(displayProfile);
     return;
   }
-  if (profile) await hydrateFromProfile(displayProfile);
-  else applyProfile(displayProfile);
+  await hydrateFromProfile(displayProfile);
   authScreen.classList.add('hidden');
   document.getElementById('onboarding').classList.remove('hidden');
-  if (!profile || !profile.full_name) {
-    profileModal.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-  }
 })();
