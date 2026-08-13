@@ -288,6 +288,8 @@
     .radius-control input[type="range"]::-webkit-slider-thumb { width:24px;height:24px;appearance:none;-webkit-appearance:none;border:4px solid #fff;border-radius:50%;background:var(--lime);box-shadow:0 4px 14px rgba(58,100,24,.35); }
     .radius-control input[type="range"]::-moz-range-thumb { width:17px;height:17px;border:4px solid #fff;border-radius:50%;background:var(--lime);box-shadow:0 4px 14px rgba(58,100,24,.35); }
     .radius-scale { display:flex;justify-content:space-between;color:var(--muted);font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase; }
+    .radius-shortcut { margin:12px 0 20px;padding:11px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--stroke);border-radius:14px;background:var(--glass);color:var(--ink);font-size:11px;font-weight:800; }
+    .radius-shortcut span:last-child { color:var(--lime);text-transform:uppercase;letter-spacing:.08em; }
     .avatar {
       width:42px;height:42px;border-radius:14px;display:grid;place-items:center;
       font-family:var(--display);font-size:15px;letter-spacing:.04em;
@@ -842,6 +844,7 @@
     <main>
       <section id="homePage" class="page">
         <p id="homeGreeting" class="greeting">Good evening, Aarav 👋</p><h1 class="page-title">Ready to move?</h1>
+        <button id="setRadiusBtn" class="radius-shortcut" type="button"><span>Discovery radius: <b class="radiusText">15 km</b></span><span>Set →</span></button>
         <div class="presence">
           <button class="player add action" data-message="Invite link copied — call your squad in!"><i>+</i><span>Invite</span></button>
           <button class="player live action" data-message="Rohit is live at Agara Turf right now"><i>RS</i><span>Rohit</span></button>

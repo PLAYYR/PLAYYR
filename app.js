@@ -370,6 +370,11 @@ function navigateTo(pageId) { const page = document.getElementById(pageId); if (
 document.querySelectorAll('.nav button').forEach(button => button.onclick = () => navigateTo(button.dataset.page));
 const profileAvatarBtn = document.getElementById('profileAvatar');
 if (profileAvatarBtn) profileAvatarBtn.onclick = () => navigateTo('settingsPage');
+const setRadiusBtn = document.getElementById('setRadiusBtn');
+if (setRadiusBtn) setRadiusBtn.onclick = () => {
+  navigateTo('eventsPage');
+  setTimeout(() => document.querySelector('#eventsPage .radius-control')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 120);
+};
 
 const radiusSliders = document.querySelectorAll('.radius-slider');
 radiusSliders.forEach(slider => {
