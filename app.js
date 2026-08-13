@@ -1,24 +1,85 @@
 const { sports } = window.PLAYYR_DATA;
+const sb = window.supabaseClient;
 
 const selected = new Set();
 const grid = document.getElementById('sportGrid');
 const authScreen = document.getElementById('authScreen');
 const profileModal = document.getElementById('profileModal');
 
+const SETTINGS_MAP = {
+  discoverableSetting: 'discoverable',
+  activitySetting: 'activity_visible',
+  locationSetting: 'location_enabled',
+  alertsSetting: 'alerts_enabled'
+};
+
 function setText(id, text) { const el = document.getElementById(id); if (el) el.textContent = text; }
 
 function applyProfile(profile) {
-  if (!profile || !profile.name) return;
-  const parts = profile.name.trim().split(/\s+/).filter(Boolean);
+  if (!profile || !profile.full_name) return;
+  const parts = profile.full_name.trim().split(/\s+/).filter(Boolean);
   const initials = parts.slice(0, 2).map(part => part[0]).join('').toUpperCase() || 'PL';
   setText('homeGreeting', `Good evening, ${parts[0] || 'Player'} 👋`);
-  setText('profileDisplayName', profile.name);
-  setText('profilePageName', profile.name);
+  setText('profileDisplayName', profile.full_name);
+  setText('profilePageName', profile.full_name);
   setText('profileAvatar', initials);
   setText('settingsAvatar', initials);
   setText('leaderboardAvatar', initials);
   setText('settingsAccount', profile.email || 'Your PLAYYR account');
   if (profile.city) { document.querySelectorAll('.cityText').forEach(el => el.textContent = profile.city); setText('leaderboardCity', profile.city); document.getElementById('cityInput').value = profile.city; }
+}
+
+function syncSportGridUI() {
+  grid.querySelectorAll('.sport').forEach(button => {
+    const name = button.querySelector('strong').textContent;
+    button.classList.toggle('selected', selected.has(name));
+  });
+  document.getElementById('count').textContent = selected.size;
+  document.getElementById('interestNext').disabled = selected.size < 3;
+}
+
+async function loadProfile(userId) {
+  const { data, error } = await sb.from('profiles').select('*').eq('id', userId).single();
+  if (error) return null;
+  return data;
+}
+
+async function saveSports() {
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return;
+  await sb.from('profiles').update({ sports: [...selected] }).eq('id', user.id);
+}
+
+function bindSettingsToggles(profile) {
+  Object.entries(SETTINGS_MAP).forEach(([id, column]) => {
+    const control = document.getElementById(id);
+    if (!control) return;
+    if (profile && profile[column] !== undefined && profile[column] !== null) control.checked = profile[column];
+    control.onchange = async () => {
+      const { data: { user } } = await sb.auth.getUser();
+      if (!user) return;
+      await sb.from('profiles').update({ [column]: control.checked }).eq('id', user.id);
+      toast('Setting saved');
+    };
+  });
+}
+
+async function hydrateFromProfile(profile) {
+  applyProfile(profile);
+  selected.clear();
+  (profile.sports || []).forEach(name => selected.add(name));
+  syncSportGridUI();
+  renderSettingsPreferences();
+  bindSettingsToggles(profile);
+  renderChosenInterests();
+}
+
+async function enterAppWithProfile(profile) {
+  await hydrateFromProfile(profile);
+  authScreen.classList.add('hidden');
+  document.getElementById('onboarding').classList.add('hidden');
+  document.querySelectorAll('.cityText').forEach(el => el.textContent = profile.city || 'Bengaluru');
+  document.getElementById('mainApp').classList.remove('hidden');
 }
 
 function showAuthForm(mode) {
@@ -32,41 +93,62 @@ function showAuthForm(mode) {
 document.getElementById('signUpTab').onclick = () => showAuthForm('signup');
 document.getElementById('signInTab').onclick = () => showAuthForm('signin');
 
-document.getElementById('signUpForm').onsubmit = event => {
+document.getElementById('signUpForm').onsubmit = async event => {
   event.preventDefault();
   const username = document.getElementById('signUpUsername').value.trim();
+  const email = document.getElementById('signUpEmail').value.trim();
   const password = document.getElementById('signUpPassword').value;
-  localStorage.setItem('playyrDemoAccount', JSON.stringify({ username, password }));
+  const { data, error } = await sb.auth.signUp({
+    email,
+    password,
+    options: { data: { username } }
+  });
+  if (error) { toast(error.message); return; }
+  if (!data.session) {
+    toast('Check your email to confirm your account, then sign in.');
+    showAuthForm('signin');
+    return;
+  }
+  document.getElementById('profileEmail').value = email;
   profileModal.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 };
 
-document.getElementById('signInForm').onsubmit = event => {
+document.getElementById('signInForm').onsubmit = async event => {
   event.preventDefault();
-  const username = document.getElementById('signInUsername').value.trim();
+  const email = document.getElementById('signInEmail').value.trim();
   const password = document.getElementById('signInPassword').value;
-  const account = JSON.parse(localStorage.getItem('playyrDemoAccount') || 'null');
-  if (!account || account.username !== username || account.password !== password) {
-    toast('Username or password is incorrect');
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  if (error) { toast('Email or password is incorrect'); return; }
+  const profile = await loadProfile(data.user.id);
+  if (profile && profile.full_name && profile.city && (profile.sports || []).length >= 3) {
+    await enterAppWithProfile(profile);
     return;
   }
-  applyProfile(JSON.parse(localStorage.getItem('playyrDemoProfile') || 'null'));
+  if (profile) await hydrateFromProfile(profile);
   authScreen.classList.add('hidden');
   document.getElementById('onboarding').classList.remove('hidden');
+  if (profile && !profile.full_name) {
+    profileModal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
 };
 
-document.getElementById('profileForm').onsubmit = event => {
+document.getElementById('profileForm').onsubmit = async event => {
   event.preventDefault();
-  const profile = {
-    name: document.getElementById('fullName').value.trim(),
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) { toast('Session expired — please sign in again'); return; }
+  const profileUpdate = {
+    full_name: document.getElementById('fullName').value.trim(),
     email: document.getElementById('profileEmail').value.trim(),
     phone: document.getElementById('profilePhone').value.trim(),
-    birthDate: document.getElementById('birthDate').value,
+    birth_date: document.getElementById('birthDate').value,
     gender: document.getElementById('profileGender').value,
     city: document.getElementById('profileCity').value.trim()
   };
-  localStorage.setItem('playyrDemoProfile', JSON.stringify(profile));
-  applyProfile(profile);
+  const { data, error } = await sb.from('profiles').update(profileUpdate).eq('id', user.id).select().single();
+  if (error) { toast('Could not save profile'); return; }
+  applyProfile(data);
   profileModal.classList.add('hidden');
   authScreen.classList.add('hidden');
   document.getElementById('onboarding').classList.remove('hidden');
@@ -130,11 +212,12 @@ function renderChosenInterests() {
   });
 }
 
-function enter(city = 'Bengaluru') {
+async function enter(city = 'Bengaluru') {
   document.querySelectorAll('.cityText').forEach(element => element.textContent = city);
   document.getElementById('onboarding').classList.add('hidden');
   document.getElementById('mainApp').classList.remove('hidden');
-  localStorage.setItem('playyrPreferences', JSON.stringify([...selected]));
+  const { data: { user } } = await sb.auth.getUser();
+  if (user) await sb.from('profiles').update({ sports: [...selected], city }).eq('id', user.id);
   renderSettingsPreferences();
   renderChosenInterests();
   window.scrollTo(0, 0);
@@ -203,14 +286,52 @@ document.getElementById('hostForm').onsubmit = event => {
   toast(`${name} submitted — ₹49 payment initiated`);
 };
 
-function renderSettingsPreferences() { const container=document.getElementById('settingsPreferences'); if(!container) return; container.innerHTML=''; sports.forEach(([icon,name])=>{ const button=document.createElement('button'); button.type='button'; button.className=`preference${selected.has(name)?' selected':''}`; button.textContent=`${icon} ${name}`; button.onclick=()=>{ if(selected.has(name)){if(selected.size<=3)return toast('Keep at least 3 sports selected');selected.delete(name)}else{if(selected.size>=4)return toast('Choose up to 4 sports');selected.add(name)} localStorage.setItem('playyrPreferences',JSON.stringify([...selected]));renderSettingsPreferences();renderChosenInterests();toast('Sports preferences updated')};container.appendChild(button)}); }
-JSON.parse(localStorage.getItem('playyrPreferences')||'[]').forEach(name=>selected.add(name));
+function renderSettingsPreferences() {
+  const container = document.getElementById('settingsPreferences');
+  if (!container) return;
+  container.innerHTML = '';
+  sports.forEach(([icon, name]) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `preference${selected.has(name) ? ' selected' : ''}`;
+    button.textContent = `${icon} ${name}`;
+    button.onclick = async () => {
+      if (selected.has(name)) {
+        if (selected.size <= 3) return toast('Keep at least 3 sports selected');
+        selected.delete(name);
+      } else {
+        if (selected.size >= 4) return toast('Choose up to 4 sports');
+        selected.add(name);
+      }
+      await saveSports();
+      renderSettingsPreferences();
+      renderChosenInterests();
+      toast('Sports preferences updated');
+    };
+    container.appendChild(button);
+  });
+}
 renderSettingsPreferences();
-['discoverableSetting','activitySetting','locationSetting','alertsSetting'].forEach(id=>{const control=document.getElementById(id);if(!control)return;const saved=localStorage.getItem(`playyr-${id}`);if(saved!==null)control.checked=saved==='true';control.onchange=()=>{localStorage.setItem(`playyr-${id}`,control.checked);toast('Setting saved')}});
-const changePasswordBtn=document.getElementById('changePasswordBtn');
-if(changePasswordBtn) changePasswordBtn.onclick=()=>toast('Password changes require secure backend authentication');
-const signOutBtn=document.getElementById('signOutBtn');
-if(signOutBtn) signOutBtn.onclick=()=>{document.getElementById('mainApp').classList.add('hidden');authScreen.classList.remove('hidden');showAuthForm('signin');window.scrollTo(0,0);toast('Signed out')};
+bindSettingsToggles(null);
+
+const changePasswordBtn = document.getElementById('changePasswordBtn');
+if (changePasswordBtn) changePasswordBtn.onclick = async () => {
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user || !user.email) { toast('Sign in to change your password'); return; }
+  const { error } = await sb.auth.resetPasswordForEmail(user.email);
+  toast(error ? 'Could not send reset email' : 'Password reset email sent');
+};
+
+const signOutBtn = document.getElementById('signOutBtn');
+if (signOutBtn) signOutBtn.onclick = async () => {
+  await sb.auth.signOut();
+  selected.clear();
+  document.getElementById('mainApp').classList.add('hidden');
+  authScreen.classList.remove('hidden');
+  showAuthForm('signin');
+  window.scrollTo(0, 0);
+  toast('Signed out');
+};
 
 function toast(message) {
   const element = document.getElementById('toast');
@@ -219,4 +340,21 @@ function toast(message) {
   clearTimeout(window.toastTimer);
   window.toastTimer = setTimeout(() => element.classList.remove('show'), 2600);
 }
-applyProfile(JSON.parse(localStorage.getItem('playyrDemoProfile') || 'null'));
+
+(async function bootstrap() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return;
+  const profile = await loadProfile(session.user.id);
+  if (!profile) return;
+  if (profile.full_name && profile.city && (profile.sports || []).length >= 3) {
+    enterAppWithProfile(profile);
+    return;
+  }
+  await hydrateFromProfile(profile);
+  authScreen.classList.add('hidden');
+  document.getElementById('onboarding').classList.remove('hidden');
+  if (!profile.full_name) {
+    profileModal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+})();
