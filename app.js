@@ -199,12 +199,10 @@ document.getElementById('signInForm').onsubmit = async event => {
   }
   if (profile) await hydrateFromProfile(displayProfile);
   else applyProfile(displayProfile);
+  profilePromptAuthorized = false;
+  closeProfilePrompt();
   authScreen.classList.add('hidden');
   document.getElementById('onboarding').classList.remove('hidden');
-  if (!profile || !profile.full_name) {
-    profilePromptAuthorized = true;
-    openProfilePrompt();
-  }
 };
 
 document.getElementById('profileForm').onsubmit = async event => {
@@ -439,16 +437,14 @@ function toast(message) {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) return;
   const profile = await loadProfile(session.user.id);
-  if (!profile || !profile.full_name) {
-    await sb.auth.signOut();
-    return;
-  }
   const displayProfile = withSavedOnboarding(profile, session.user);
   if (displayProfile.city && (displayProfile.sports || []).length >= 3) {
     enterAppWithProfile(displayProfile);
     return;
   }
-  await hydrateFromProfile(displayProfile);
+  if (profile) await hydrateFromProfile(displayProfile);
+  else applyProfile(displayProfile);
+  closeProfilePrompt();
   authScreen.classList.add('hidden');
   document.getElementById('onboarding').classList.remove('hidden');
 })();
