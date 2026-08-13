@@ -163,11 +163,9 @@ sports.forEach(([icon, name, type]) => {
     if (selected.has(name)) {
       selected.delete(name);
       button.classList.remove('selected');
-    } else if (selected.size < 4) {
+    } else {
       selected.add(name);
       button.classList.add('selected');
-    } else {
-      toast('Choose up to 4 interests');
     }
     document.getElementById('count').textContent = selected.size;
     document.getElementById('interestNext').disabled = selected.size < 3;
@@ -299,7 +297,6 @@ function renderSettingsPreferences() {
         if (selected.size <= 3) return toast('Keep at least 3 sports selected');
         selected.delete(name);
       } else {
-        if (selected.size >= 4) return toast('Choose up to 4 sports');
         selected.add(name);
       }
       await saveSports();
