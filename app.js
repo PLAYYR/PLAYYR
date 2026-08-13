@@ -391,8 +391,9 @@ async function loadYourTeams() {
   list.innerHTML = teams.map(team => {
     const isCreator = team.creator_id === user.id;
     const members = team.team_members || [];
+    const creatorName = members.find(member => member.user_id === team.creator_id)?.display_name || 'A PLAYYR player';
     const rows = members.map(member => `<div class="member-row"><i>${escapeHtml(initialsFor(member.display_name))}</i><span>${escapeHtml(member.display_name || 'PLAYYR member')}${member.user_id === team.creator_id ? ' · Creator' : ''}</span>${isCreator && member.user_id !== user.id ? `<button type="button" data-remove-member="${member.user_id}" data-team-id="${team.id}">Remove</button>` : ''}</div>`).join('');
-    return `<article class="team owned-team"><div class="owned-team-summary"><div class="team-logo">${escapeHtml(initialsFor(team.name))}</div><div><h3>${escapeHtml(team.name)}</h3><p>${escapeHtml(team.sport)} · ${members.length}/${team.max_members} players</p></div>${isCreator ? '<span class="owner-pill">Creator</span>' : '<span class="owner-pill">Member</span>'}</div><div class="team-actions">${isCreator ? `<button class="small-btn" type="button" data-invite-code="${team.invite_code}">Invite people</button>` : ''}<button class="ghost" type="button" data-toggle-members="${team.id}">View members</button></div><div id="members-${team.id}" class="member-list hidden">${rows}</div></article>`;
+    return `<article class="team owned-team"><div class="owned-team-summary"><div class="team-logo">${escapeHtml(initialsFor(team.name))}</div><div><h3>${escapeHtml(team.name)}</h3><p>${escapeHtml(team.sport)} · ${members.length}/${team.max_members} players</p></div>${isCreator ? '<span class="owner-pill">Creator</span>' : '<span class="owner-pill">Member</span>'}</div><div class="team-actions">${isCreator ? `<button class="small-btn" type="button" data-invite-code="${team.invite_code}" data-inviter="${escapeHtml(creatorName)}" data-team-name="${escapeHtml(team.name)}" data-team-sport="${escapeHtml(team.sport)}">Invite people</button>` : ''}<button class="ghost" type="button" data-toggle-members="${team.id}">View members</button></div><div id="members-${team.id}" class="member-list hidden">${rows}</div></article>`;
   }).join('');
 }
 
@@ -407,8 +408,9 @@ document.getElementById('yourTeamsList')?.addEventListener('click', async event 
   const inviteButton = event.target.closest('[data-invite-code]');
   if (inviteButton) {
     const url = `${location.origin}${location.pathname}?join=${encodeURIComponent(inviteButton.dataset.inviteCode)}`;
-    try { await navigator.clipboard.writeText(url); toast('Invite link copied'); }
-    catch (_) { window.prompt('Copy this team invite link', url); }
+    const message = `${inviteButton.dataset.inviter} has invited you to join ${inviteButton.dataset.teamName}, a ${inviteButton.dataset.teamSport} team on PLAYYR.\n${url}`;
+    try { await navigator.clipboard.writeText(message); toast('Invite message and link copied'); }
+    catch (_) { window.prompt('Copy this team invitation', message); }
     return;
   }
   const toggleButton = event.target.closest('[data-toggle-members]');
@@ -444,18 +446,62 @@ document.getElementById('makeTeamForm')?.addEventListener('submit', async event 
 });
 
 let pendingInviteHandled = false;
+let pendingInviteCode = '';
 async function handlePendingTeamInvite() {
   if (pendingInviteHandled) return;
   const code = new URLSearchParams(location.search).get('join');
   if (!code) return;
-  const { data: { user } } = await sb.auth.getUser();
-  if (!user) { showAuthForm('signin'); toast('Sign in to join the invited team'); return; }
-  pendingInviteHandled = true;
-  const { data, error } = await sb.rpc('join_team_by_invite', { p_invite_code:code });
-  if (error) toast(error.message);
-  else { toast(data === 'already_member' ? 'You are already in this team' : 'Team joined'); await openYourTeams(); }
-  history.replaceState({}, '', `${location.pathname}${location.hash}`);
+  pendingInviteCode = code;
+  const { data, error } = await sb.rpc('get_team_invite_preview', { p_invite_code:code });
+  const modal = document.getElementById('teamInviteModal');
+  const joinButton = document.getElementById('acceptTeamInviteBtn');
+  if (error || !data?.valid) {
+    setText('teamInviteTitle', 'Invite unavailable');
+    setText('teamInviteMessage', data?.message || 'This team invitation is invalid or no longer available.');
+    joinButton.disabled = true;
+  } else {
+    setText('inviteTeamIcon', initialsFor(data.team_name));
+    setText('teamInviteTitle', `Join ${data.team_name}`);
+    document.getElementById('teamInviteMessage').innerHTML = `<strong>${escapeHtml(data.inviter_name)}</strong> has invited you to join <strong>${escapeHtml(data.team_name)}</strong>, a ${escapeHtml(data.sport)} team on PLAYYR.`;
+    setText('inviteSport', data.sport);
+    setText('inviteCapacity', `${data.member_count}/${data.max_members} players`);
+    joinButton.disabled = Boolean(data.is_full);
+    joinButton.textContent = data.is_full ? 'Team is full' : 'Join team';
+  }
+  modal.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
 }
+
+document.getElementById('acceptTeamInviteBtn')?.addEventListener('click', async () => {
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) {
+    document.getElementById('teamInviteModal').classList.add('hidden');
+    document.body.style.overflow = '';
+    showAuthForm('signin');
+    toast('Sign in first, then you can choose to join');
+    return;
+  }
+  const button = document.getElementById('acceptTeamInviteBtn');
+  button.disabled = true;
+  button.textContent = 'Joining...';
+  const { data, error } = await sb.rpc('join_team_by_invite', { p_invite_code:pendingInviteCode });
+  if (error) {
+    button.disabled = false;
+    button.textContent = 'Join team';
+    return toast(error.message);
+  }
+  pendingInviteHandled = true;
+  document.getElementById('teamInviteModal').classList.add('hidden');
+  document.body.style.overflow = '';
+  history.replaceState({}, '', `${location.pathname}${location.hash}`);
+  toast(data === 'already_member' ? 'You are already in this team' : 'You joined the team');
+  await openYourTeams();
+});
+
+document.getElementById('declineTeamInviteBtn')?.addEventListener('click', () => {
+  document.getElementById('teamInviteModal').classList.add('hidden');
+  document.body.style.overflow = '';
+});
 
 const registerTeamModal = document.getElementById('registerTeamModal');
 const registrationTeamSelect = document.getElementById('registrationTeamSelect');
@@ -778,7 +824,10 @@ function toast(message) {
 
 (async function bootstrap() {
   const { data: { session } } = await sb.auth.getSession();
-  if (!session) return;
+  if (!session) {
+    await handlePendingTeamInvite();
+    return;
+  }
   const profile = await loadProfile(session.user.id);
   const displayProfile = withSavedOnboarding(profile, session.user);
   renderRadius(session.user.user_metadata.playyr_radius_km || localStorage.getItem(`playyrRadius:${session.user.id}`));
