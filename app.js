@@ -428,16 +428,30 @@ document.getElementById('yourTeamsList')?.addEventListener('click', async event 
   }
   const removeButton = event.target.closest('[data-remove-member]');
   if (removeButton) {
+    const teamId = removeButton.dataset.teamId;
+    const memberId = removeButton.dataset.removeMember;
     removeButton.disabled = true;
     removeButton.textContent = 'Removing...';
-    const { data, error } = await sb.rpc('remove_team_member', { p_team_id:removeButton.dataset.teamId, p_user_id:removeButton.dataset.removeMember });
-    if (error || !data?.removed) {
+    const { data, error } = await sb.rpc('remove_team_member', { p_team_id:teamId, p_user_id:memberId });
+    let result = data;
+    if (typeof result === 'string') {
+      try { result = JSON.parse(result); } catch (_) {}
+    }
+    if (!error) {
+      const { data:remainingMember, error:verifyError } = await sb.from('team_members').select('user_id').eq('team_id', teamId).eq('user_id', memberId).maybeSingle();
+      if (!verifyError && !remainingMember) {
+        toast(result?.message || 'Player removed from the team');
+        await loadYourTeams();
+        return;
+      }
+    }
+    if (error || result?.removed === false) {
       removeButton.disabled = false;
       removeButton.textContent = 'Remove';
-      toast(error?.message || data?.message || 'Player could not be removed');
+      toast(error?.message || result?.message || 'Player could not be removed');
       return;
     }
-    toast(data.message || 'Player removed');
+    toast(result?.message || 'Player removed');
     await loadYourTeams();
   }
 });
