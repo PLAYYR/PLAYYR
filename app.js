@@ -19,12 +19,11 @@ function setText(id, text) { const el = document.getElementById(id); if (el) el.
 
 function renderRadius(radius) {
   const value = Math.min(50, Math.max(1, Number(radius) || 15));
-  const slider = document.getElementById('radiusSlider');
-  if (slider) {
+  document.querySelectorAll('.radius-slider').forEach(slider => {
     slider.value = value;
     slider.style.setProperty('--radius-progress', `${((value - 1) / 49) * 100}%`);
-  }
-  setText('radiusValue', `${value} km`);
+  });
+  document.querySelectorAll('.radiusValue').forEach(element => element.textContent = `${value} km`);
   document.querySelectorAll('.radiusText').forEach(element => element.textContent = `${value} km`);
   document.querySelectorAll('#findPage .team').forEach(team => {
     const label = team.querySelector('.sport-name')?.textContent || '';
@@ -372,18 +371,18 @@ document.querySelectorAll('.nav button').forEach(button => button.onclick = () =
 const profileAvatarBtn = document.getElementById('profileAvatar');
 if (profileAvatarBtn) profileAvatarBtn.onclick = () => navigateTo('settingsPage');
 
-const radiusSlider = document.getElementById('radiusSlider');
-if (radiusSlider) {
-  radiusSlider.oninput = () => renderRadius(radiusSlider.value);
-  radiusSlider.onchange = async () => {
-    const radius = Number(radiusSlider.value);
+const radiusSliders = document.querySelectorAll('.radius-slider');
+radiusSliders.forEach(slider => {
+  slider.oninput = () => renderRadius(slider.value);
+  slider.onchange = async () => {
+    const radius = Number(slider.value);
     const { data: { user } } = await sb.auth.getUser();
     if (!user) return;
     localStorage.setItem(`playyrRadius:${user.id}`, String(radius));
     const { error } = await sb.auth.updateUser({ data: { playyr_radius_km: radius } });
     toast(error ? 'Radius saved on this device' : `Discovery radius set to ${radius} km`);
   };
-}
+});
 renderRadius(15);
 
 document.querySelectorAll('.filters').forEach(row => {
@@ -402,7 +401,7 @@ document.querySelectorAll('.action').forEach(button => {
 const eventFilters = document.getElementById('eventFilters');
 function filterEvents(filter = 'For you') {
   const cards = [...document.querySelectorAll('#eventsPage .event-card')];
-  const radius = Number(document.getElementById('radiusSlider')?.value) || 15;
+  const radius = Number(document.querySelector('.radius-slider')?.value) || 15;
   let visible = 0;
   cards.forEach(card => {
     const distanceLabel = card.querySelector('.distance')?.textContent || '';

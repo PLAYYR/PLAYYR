@@ -842,7 +842,6 @@
     <main>
       <section id="homePage" class="page">
         <p id="homeGreeting" class="greeting">Good evening, Aarav 👋</p><h1 class="page-title">Ready to move?</h1>
-        <div class="radius-control"><div class="radius-head"><div><strong>Discovery radius</strong><small>Events and teams shown around your location</small></div><output id="radiusValue" class="radius-value" for="radiusSlider">15 km</output></div><input id="radiusSlider" type="range" min="1" max="50" value="15" step="1" aria-label="Discovery radius in kilometres"><div class="radius-scale"><span>1 km</span><span>50 km</span></div></div>
         <div class="presence">
           <button class="player add action" data-message="Invite link copied — call your squad in!"><i>+</i><span>Invite</span></button>
           <button class="player live action" data-message="Rohit is live at Agara Turf right now"><i>RS</i><span>Rohit</span></button>
@@ -878,6 +877,7 @@
 
       <section id="eventsPage" class="page hidden">
         <p class="greeting"><span class="cityText">Bengaluru</span> · Within <span class="radiusText">15 km</span></p><h1 class="page-title">Find your next<br>competition.</h1>
+        <div class="radius-control"><div class="radius-head"><div><strong>Event radius</strong><small>Only show tournaments within this distance</small></div><output class="radius-value radiusValue">15 km</output></div><input class="radius-slider" type="range" min="1" max="50" value="15" step="1" aria-label="Event radius in kilometres"><div class="radius-scale"><span>1 km</span><span>50 km</span></div></div>
         <button id="hostBtn" class="host" type="button">＋ List a tournament on PLAYYR</button>
         <div id="eventFilters" class="filters"><button class="chip active" data-filter="For you">For you</button><button class="chip" data-filter="Football">Football</button><button class="chip" data-filter="BGMI">BGMI</button><button class="chip" data-filter="Badminton">Badminton</button><button class="chip" data-filter="Cricket">Cricket</button></div>
         <article class="event-card" data-category="Football"><div class="event-cover"><span class="event-type">⚽ FOOTBALL</span><span class="distance">3.2 km</span><span class="cover-status hot">🔥 Filling fast</span></div><div class="event-body"><h3>Sunday 5-a-side Cup</h3><div class="meta"><span>📅 18 Aug · 7:00 AM</span><span>📍 Turf Park, HSR</span></div><div class="going"><i class="face"></i><i class="face"></i><i class="face"></i><span><b>+18 going</b> · 4 from your crew</span></div><div class="event-bottom"><span class="spots"><b>3 team spots</b> left · ₹1,200/team</span><button class="small-btn action" data-message="Registration saved — organizer details are ready!">Register</button></div></div></article>
@@ -888,6 +888,7 @@
 
       <section id="findPage" class="page hidden">
         <p class="greeting">Teams playing near <span class="cityText">Bengaluru</span></p><h1 class="page-title">Your local<br>playground.</h1>
+        <div class="radius-control"><div class="radius-head"><div><strong>Team radius</strong><small>Only show teams within this distance</small></div><output class="radius-value radiusValue">15 km</output></div><input class="radius-slider" type="range" min="1" max="50" value="15" step="1" aria-label="Team radius in kilometres"><div class="radius-scale"><span>1 km</span><span>50 km</span></div></div>
         <button id="listTeamBtn" class="find-list-cta" type="button"><span><strong>List your team</strong><small>Let nearby players discover and join you</small></span><i>＋</i></button>
         <div class="find-banner"><div><h3>6 crews are active today</h3><p>Based on your interests and usual play area.</p></div><i class="radar"></i></div>
         <div class="filters"><button class="chip active">All nearby</button><button class="chip">Football</button><button class="chip">BGMI</button><button class="chip">Badminton</button></div>
@@ -976,6 +977,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="config.js"></script>
 <script src="data.js"></script>
-<script src="app.js?v=20260813-11"></script>
+<script src="app.js?v=20260813-12"></script>
 </body>
 </html>
