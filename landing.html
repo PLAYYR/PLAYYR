@@ -132,6 +132,21 @@
   }
   .modal-card h3 { font-size:24px; font-weight:800; letter-spacing:-.03em; margin:10px 0 8px; }
   .modal-sub { color:var(--muted); font-size:13px; line-height:1.5; margin-bottom:24px; }
+  .modal-tabs {
+    display:grid; grid-template-columns:1fr 1fr; gap:4px;
+    background:rgba(15,21,15,.06); border:1px solid var(--stroke-soft);
+    border-radius:15px; padding:4px; margin-bottom:22px;
+  }
+  .modal-tabs button {
+    border:0; background:transparent; border-radius:11px; padding:11px;
+    font-weight:800; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); transition:.2s; cursor:pointer;
+  }
+  .modal-tabs button.active {
+    color:#101a0d; background:linear-gradient(135deg,#e2ff7c,#aef04a);
+    box-shadow:0 6px 18px rgba(200,255,69,.24), inset 0 1px 0 rgba(255,255,255,.6);
+  }
+  .modal-form.hidden { display:none; }
+  .field-hint { font-size:11px; color:var(--muted); margin:-10px 0 16px; }
   .field { margin-bottom:16px; }
   .field label { display:block; font-size:10px; font-weight:800; letter-spacing:.14em; color:var(--muted); margin-bottom:7px; }
   .field input {
@@ -144,6 +159,7 @@
     background:rgba(199,71,58,.08); border-radius:10px;
   }
   .modal-error.hidden { display:none; }
+  .modal-error.note { color:var(--mint); background:rgba(15,172,104,.1); }
   .modal-card .btn-primary { width:100%; }
   .modal-card .btn-primary:disabled { opacity:.5; cursor:not-allowed; transform:none; }
 
@@ -336,6 +352,7 @@
         <div class="float-chip" style="right:0; top:-300px; --r:5deg; animation-delay:.9s;"><span class="ic">🏆</span> City Showdown · Sat</div>
         <div class="float-chip" style="left:2%; top:-90px; --r:4deg; animation-delay:1.5s;"><span class="ic">🔥</span> 12-day streak</div>
         <div class="float-chip" style="right:1%; top:-70px; --r:-4deg; animation-delay:.6s;"><span class="ic">🏸</span> 5 players nearby</div>
+        <div class="float-chip" style="right:3%; top:-190px; --r:-3deg; animation-delay:1.2s;"><span class="ic">🔥</span> You're such a PLAYYR</div>
       </div>
     </div>
   </section>
@@ -442,10 +459,25 @@
 <div class="modal-backdrop hidden" id="signInModal">
   <div class="modal-card">
     <button class="modal-close" id="closeSignIn" type="button" aria-label="Close">&times;</button>
-    <span class="eyebrow">Welcome back</span>
-    <h3>Sign in to PLAYYR</h3>
-    <p class="modal-sub">PLAYYR is launching soon — sign in here if you already have an account.</p>
-    <form id="landingSignInForm">
+    <span class="eyebrow" id="modalEyebrow">Welcome back</span>
+    <h3 id="modalTitle">Sign in to PLAYYR</h3>
+    <p class="modal-sub" id="modalSub">PLAYYR is launching soon — sign in here if you already have an account.</p>
+
+    <div class="modal-tabs">
+      <button type="button" id="modalSignUpTab">Sign up</button>
+      <button type="button" id="modalSignInTab" class="active">Sign in</button>
+    </div>
+
+    <form id="landingSignUpForm" class="modal-form hidden">
+      <div class="field"><label for="suUsername">USERNAME</label><input id="suUsername" required minlength="3" placeholder="Choose a username" autocomplete="username"></div>
+      <div class="field"><label for="suEmail">EMAIL</label><input id="suEmail" type="email" required placeholder="you@email.com" autocomplete="email"></div>
+      <div class="field"><label for="suPassword">PASSWORD</label><input id="suPassword" type="password" required minlength="8" placeholder="Create a password" autocomplete="new-password"></div>
+      <p class="field-hint">Use at least 8 characters.</p>
+      <p class="modal-error hidden" id="suError"></p>
+      <button class="btn-primary" type="submit" id="suSubmit">Create account</button>
+    </form>
+
+    <form id="landingSignInForm" class="modal-form">
       <div class="field"><label for="lsEmail">EMAIL</label><input id="lsEmail" type="email" required placeholder="you@email.com" autocomplete="email"></div>
       <div class="field"><label for="lsPassword">PASSWORD</label><input id="lsPassword" type="password" required placeholder="Your password" autocomplete="current-password"></div>
       <p class="modal-error hidden" id="lsError"></p>
@@ -463,19 +495,45 @@
   );
 
   const signInModal = document.getElementById('signInModal');
-  function openSignIn() {
+  const modalEyebrow = document.getElementById('modalEyebrow');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalSub = document.getElementById('modalSub');
+  const signUpForm = document.getElementById('landingSignUpForm');
+  const signInForm = document.getElementById('landingSignInForm');
+  const signUpTabBtn = document.getElementById('modalSignUpTab');
+  const signInTabBtn = document.getElementById('modalSignInTab');
+
+  function showModalForm(mode) {
+    const signingUp = mode === 'signup';
+    signUpTabBtn.classList.toggle('active', signingUp);
+    signInTabBtn.classList.toggle('active', !signingUp);
+    signUpForm.classList.toggle('hidden', !signingUp);
+    signInForm.classList.toggle('hidden', signingUp);
+    modalEyebrow.textContent = signingUp ? 'Get in early' : 'Welcome back';
+    modalTitle.textContent = signingUp ? 'Create your account' : 'Sign in to PLAYYR';
+    modalSub.textContent = signingUp
+      ? "PLAYYR is launching soon — create an account now and you'll be ready on day one."
+      : 'PLAYYR is launching soon — sign in here if you already have an account.';
+  }
+  signUpTabBtn.onclick = () => showModalForm('signup');
+  signInTabBtn.onclick = () => showModalForm('signin');
+
+  function openSignIn(mode) {
+    showModalForm(mode === 'signup' ? 'signup' : 'signin');
     signInModal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
-    document.getElementById('lsEmail').focus();
+    (mode === 'signup' ? document.getElementById('suUsername') : document.getElementById('lsEmail')).focus();
   }
   function closeSignIn() {
     signInModal.classList.add('hidden');
     document.body.style.overflow = '';
     document.getElementById('lsError').classList.add('hidden');
+    document.getElementById('lsError').classList.remove('note');
+    document.getElementById('suError').classList.add('hidden');
   }
   ['navSignIn', 'heroSignIn', 'ctaSignIn'].forEach(id => {
     const btn = document.getElementById(id);
-    if (btn) btn.onclick = openSignIn;
+    if (btn) btn.onclick = () => openSignIn('signin');
   });
   document.getElementById('closeSignIn').onclick = closeSignIn;
   signInModal.addEventListener('click', e => { if (e.target === signInModal) closeSignIn(); });
@@ -488,6 +546,7 @@
     const errEl = document.getElementById('lsError');
     const submitBtn = document.getElementById('lsSubmit');
     errEl.classList.add('hidden');
+    errEl.classList.remove('note');
     submitBtn.disabled = true;
     submitBtn.textContent = 'Signing in…';
     const { error } = await sb.auth.signInWithPassword({ email, password });
@@ -499,6 +558,58 @@
       return;
     }
     window.location.href = 'index.html';
+  };
+
+  document.getElementById('landingSignUpForm').onsubmit = async event => {
+    event.preventDefault();
+    const username = document.getElementById('suUsername').value.trim();
+    const email = document.getElementById('suEmail').value.trim().toLowerCase();
+    const password = document.getElementById('suPassword').value;
+    const errEl = document.getElementById('suError');
+    const submitBtn = document.getElementById('suSubmit');
+    errEl.classList.add('hidden');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Creating account…';
+    try {
+      const { data, error } = await sb.auth.signUp({
+        email,
+        password,
+        options: { data: { username } }
+      });
+      const duplicateAccount = error && (
+        error.code === 'user_already_exists' ||
+        error.code === 'email_exists' ||
+        /already (registered|exists)/i.test(error.message)
+      );
+      const hiddenDuplicate = !error && data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0;
+      if (duplicateAccount || hiddenDuplicate) {
+        document.getElementById('lsEmail').value = email;
+        showModalForm('signin');
+        const lsErr = document.getElementById('lsError');
+        lsErr.textContent = 'This email already has an account — please sign in';
+        lsErr.classList.add('note');
+        lsErr.classList.remove('hidden');
+        return;
+      }
+      if (error) {
+        errEl.textContent = error.message;
+        errEl.classList.remove('hidden');
+        return;
+      }
+      if (!data.session) {
+        document.getElementById('lsEmail').value = email;
+        showModalForm('signin');
+        const lsErr = document.getElementById('lsError');
+        lsErr.textContent = 'Account created — check your email to confirm it, then sign in.';
+        lsErr.classList.add('note');
+        lsErr.classList.remove('hidden');
+        return;
+      }
+      window.location.href = 'index.html';
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Create account';
+    }
   };
 
   // nav scroll shadow
