@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#f6f5ef" />
+<title>PLAYYR — Your city is your playground</title>
+<meta name="description" content="Find your people to play. Discover local sports crews, join tournaments, and keep your streak alive — all in your city." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light;
+    --bg:#f6f5ef;
+    --panel:#ffffff;
+    --ink:#0f150f;
+    --muted:#666f65;
+    --lime:#7bc428;
+    --mint:#0fac68;
+    --violet:#6a4bf0;
+    --orange:#ff6a2e;
+    --live:#ff3b30;
+    --gold:#e8a400;
+    --navy:#0d1c30;
+    --stroke:rgba(15,21,15,.13);
+    --stroke-soft:rgba(15,21,15,.08);
+    --stroke-strong:rgba(15,21,15,.26);
+    --sheen:inset 0 1px 0 rgba(255,255,255,.9);
+    --shadow:0 10px 24px rgba(15,21,15,.08), 0 2px 6px rgba(15,21,15,.05);
+    --shadow-lg:0 26px 54px rgba(15,21,15,.13), 0 6px 16px rgba(15,21,15,.07);
+    --glow-lime:0 12px 28px rgba(123,196,40,.32);
+    --display:'Anton',Impact,sans-serif;
+    --r-xs:12px; --r-sm:16px; --r-md:20px; --r-lg:26px; --r-xl:32px;
+  }
+  * { box-sizing:border-box; }
+  html { -webkit-text-size-adjust:100%; }
+  body {
+    margin:0; min-height:100vh; color:var(--ink); background:var(--bg);
+    font-family:'DM Sans',system-ui,sans-serif; -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  button,a { font:inherit; }
+  h1,h2,h3,p { margin-top:0; }
+  h1,h2,h3 { font-family:'Manrope',sans-serif; letter-spacing:-.045em; }
+  img,svg { display:block; max-width:100%; }
+  a { color:inherit; text-decoration:none; }
+  ::selection { background:rgba(123,196,40,.35); color:var(--ink); }
+
+  /* ambient background */
+  .ambient { position:fixed; inset:-20vh -10vw; z-index:0; pointer-events:none; overflow:hidden; }
+  .ambient i { position:absolute; display:block; border-radius:50%; filter:blur(70px); will-change:transform; }
+  .ambient i:nth-child(1) { width:78vmin;height:78vmin;left:-14vmin;top:-6vmin;background:radial-gradient(circle,#2ecf82,transparent 66%); opacity:.16; animation:drift1 26s ease-in-out infinite alternate; }
+  .ambient i:nth-child(2) { width:62vmin;height:62vmin;right:-14vmin;top:10vmin;background:radial-gradient(circle,#c8ff45,transparent 64%); opacity:.14; animation:drift2 32s ease-in-out infinite alternate; }
+  .ambient i:nth-child(3) { width:82vmin;height:82vmin;left:6vmin;bottom:-22vmin;background:radial-gradient(circle,#7a5cff,transparent 66%); opacity:.1; animation:drift3 30s ease-in-out infinite alternate; }
+  .ambient i:nth-child(4) { width:56vmin;height:56vmin;right:-4vmin;bottom:2vmin;background:radial-gradient(circle,#16b6d8,transparent 64%); opacity:.1; animation:drift1 24s ease-in-out infinite alternate-reverse; }
+  @keyframes drift1 { to { transform:translate3d(14vmin,-8vmin,0) scale(1.18); } }
+  @keyframes drift2 { to { transform:translate3d(-12vmin,12vmin,0) scale(1.12); } }
+  @keyframes drift3 { to { transform:translate3d(10vmin,-14vmin,0) scale(.88); } }
+
+  .grain {
+    position:fixed; inset:0; z-index:80; pointer-events:none; opacity:.025;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+
+  .wrap { position:relative; z-index:1; max-width:1180px; margin:0 auto; padding:0 24px; }
+
+  .eyebrow { font-size:11px; font-weight:800; letter-spacing:.22em; text-transform:uppercase; color:var(--mint); }
+
+  /* nav */
+  .nav-bar { position:sticky; top:0; z-index:50; padding:18px 0; transition:.3s; }
+  .nav-bar.scrolled { background:rgba(246,245,239,.82); backdrop-filter:blur(14px); box-shadow:0 1px 0 var(--stroke-soft); }
+  .nav-inner { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+  .brand { font:800 20px 'Manrope',sans-serif; letter-spacing:-.05em; display:flex; align-items:center; gap:9px; color:var(--ink); }
+  .brand-mark {
+    width:26px;height:26px;border-radius:50% 50% 46% 12%;display:inline-block;transform:rotate(-8deg);position:relative;
+    background:linear-gradient(140deg,#e6ff8c,var(--lime));
+    box-shadow:0 6px 18px rgba(200,255,69,.4), inset 0 1px 0 rgba(255,255,255,.7);
+    flex:none;
+  }
+  .brand-mark:after { content:''; position:absolute; width:8px;height:8px;background:#0b1410;border-radius:50%;right:5px;top:5px; }
+  .nav-links { display:flex; align-items:center; gap:30px; }
+  .nav-links a { font-size:13px; font-weight:700; color:var(--muted); transition:.2s; }
+  .nav-links a:hover { color:var(--ink); }
+  .nav-cta { display:flex; align-items:center; gap:10px; }
+  .btn-ghost {
+    border:1.5px solid var(--stroke-strong); background:transparent; color:var(--ink);
+    border-radius:var(--r-sm); padding:11px 18px;
+    font-weight:800; font-size:12px; letter-spacing:.08em; text-transform:uppercase;
+    transition:.2s; display:inline-block; cursor:pointer;
+  }
+  .btn-ghost:hover { background:var(--panel); border-color:var(--ink); }
+  .btn-primary {
+    border:0; border-radius:var(--r-sm); padding:13px 22px; cursor:pointer;
+    font-family:var(--display); font-weight:400; font-size:14px; letter-spacing:.06em; text-transform:uppercase;
+    color:#0e1a0b; background:linear-gradient(135deg,#e2ff7c,#a8ef38);
+    box-shadow:var(--glow-lime), inset 0 1px 0 rgba(255,255,255,.65);
+    transition:transform .18s cubic-bezier(.2,.8,.3,1), box-shadow .25s;
+    display:inline-block; text-align:center;
+  }
+  .btn-primary:hover { transform:translateY(-2px); box-shadow:0 18px 46px rgba(200,255,69,.36), inset 0 1px 0 rgba(255,255,255,.7); }
+  .btn-primary:active { transform:translateY(0) scale(.98); }
+  .btn-primary.lg { padding:19px 34px; font-size:17px; }
+  .menu-toggle { display:none; border:1.5px solid var(--stroke-strong); background:var(--panel); border-radius:12px; padding:9px; cursor:pointer; }
+  .menu-toggle svg { width:20px; height:20px; }
+
+  /* hero */
+  .hero { padding:64px 0 40px; text-align:center; position:relative; }
+  .hero-badge {
+    display:inline-flex; align-items:center; gap:8px; background:var(--panel); border:1.5px solid var(--stroke);
+    border-radius:999px; padding:8px 16px 8px 8px; box-shadow:var(--shadow); margin-bottom:28px;
+    font-size:12px; font-weight:700; color:var(--muted);
+    opacity:0; animation:fadeUp .7s .05s cubic-bezier(.2,.8,.2,1) forwards;
+  }
+  .hero-badge .dot { width:8px;height:8px;border-radius:50%;background:var(--live); box-shadow:0 0 0 4px rgba(255,59,48,.16); animation:pulse 1.8s infinite; flex:none; }
+  @keyframes pulse { 0%,100%{ opacity:1 } 50%{ opacity:.35 } }
+  .hero h1 {
+    font-family:var(--display); font-weight:400; text-transform:uppercase;
+    font-size:clamp(46px,8.4vw,104px); line-height:.92; letter-spacing:0; margin:0 auto 22px;
+    max-width:920px;
+    opacity:0; animation:fadeUp .8s .12s cubic-bezier(.2,.8,.2,1) forwards;
+  }
+  .hero h1 em { font-style:normal; background:linear-gradient(100deg,var(--mint),var(--lime) 60%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .hero p.sub {
+    font-size:18px; color:var(--muted); max-width:540px; margin:0 auto 36px; line-height:1.6;
+    opacity:0; animation:fadeUp .8s .22s cubic-bezier(.2,.8,.2,1) forwards;
+  }
+  .hero-ctas { display:flex; align-items:center; justify-content:center; gap:14px; flex-wrap:wrap; margin-bottom:56px;
+    opacity:0; animation:fadeUp .8s .3s cubic-bezier(.2,.8,.2,1) forwards; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
+
+  .hero-chips { position:relative; height:0; max-width:1180px; margin:0 auto; }
+  .float-chip {
+    position:absolute; background:var(--panel); border:1.5px solid var(--stroke); border-radius:18px;
+    padding:10px 16px; font-size:13px; font-weight:800; box-shadow:var(--shadow); display:flex; align-items:center; gap:8px;
+    animation:float 6s ease-in-out infinite;
+  }
+  .float-chip span.ic { font-size:18px; }
+  @keyframes float { 0%,100%{ transform:translateY(0) rotate(var(--r,0deg)); } 50%{ transform:translateY(-14px) rotate(var(--r,0deg)); } }
+
+  /* stat strip */
+  .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--stroke);
+    border:1.5px solid var(--stroke); border-radius:var(--r-lg); overflow:hidden; box-shadow:var(--shadow-lg); margin-bottom:88px; }
+  .stat-cell { background:var(--panel); padding:28px 16px; text-align:center; }
+  .stat-num { font-family:var(--display); font-weight:400; font-size:clamp(26px,4vw,40px); color:var(--ink); }
+  .stat-label { font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-top:6px; }
+
+  /* marquee */
+  .marquee-wrap { overflow:hidden; padding:18px 0; margin-bottom:96px; border-top:1.5px solid var(--stroke); border-bottom:1.5px solid var(--stroke); background:var(--panel); }
+  .marquee-track { display:flex; gap:14px; width:max-content; animation:scroll-x 32s linear infinite; }
+  .marquee-wrap:hover .marquee-track { animation-play-state:paused; }
+  @keyframes scroll-x { from { transform:translateX(0); } to { transform:translateX(-50%); } }
+  .sport-pill {
+    display:flex; align-items:center; gap:10px; border:1.5px solid var(--stroke); background:var(--glass-3,#f1efe6);
+    border-radius:16px; padding:12px 20px; font-weight:800; font-size:14px; white-space:nowrap;
+  }
+  .sport-pill .ic { font-size:20px; }
+
+  /* section heading */
+  .section-head { text-align:center; max-width:620px; margin:0 auto 52px; }
+  .section-head h2 { font-family:var(--display); font-weight:400; text-transform:uppercase; font-size:clamp(30px,4.4vw,48px); line-height:1; margin:14px 0 16px; }
+  .section-head p { color:var(--muted); font-size:16px; line-height:1.6; }
+
+  .reveal { opacity:0; transform:translateY(28px); transition:opacity .7s cubic-bezier(.2,.8,.2,1), transform .7s cubic-bezier(.2,.8,.2,1); }
+  .reveal.in { opacity:1; transform:translateY(0); }
+
+  /* features */
+  .features { display:grid; grid-template-columns:repeat(4,1fr); gap:18px; margin-bottom:110px; }
+  .feature-card {
+    background:var(--panel); border:1.5px solid var(--stroke); border-radius:var(--r-lg); padding:28px 24px;
+    box-shadow:var(--shadow); transition:transform .3s cubic-bezier(.2,.8,.2,1), box-shadow .3s;
+  }
+  .feature-card:hover { transform:translateY(-6px); box-shadow:var(--shadow-lg); }
+  .feature-icon {
+    width:52px; height:52px; border-radius:16px; display:flex; align-items:center; justify-content:center;
+    font-size:24px; margin-bottom:20px;
+  }
+  .feature-card h3 { font-size:18px; font-weight:800; margin-bottom:10px; letter-spacing:-.02em; }
+  .feature-card p { color:var(--muted); font-size:14px; line-height:1.6; }
+
+  /* how it works */
+  .steps { display:grid; grid-template-columns:repeat(3,1fr); gap:0; margin-bottom:120px; position:relative; }
+  .steps:before {
+    content:''; position:absolute; top:34px; left:16.6%; right:16.6%; height:2px;
+    background:repeating-linear-gradient(90deg,var(--stroke-strong) 0 10px,transparent 10px 20px);
+  }
+  .step { text-align:center; padding:0 20px; position:relative; }
+  .step-num {
+    width:68px; height:68px; border-radius:50%; background:var(--panel); border:2px solid var(--ink);
+    display:flex; align-items:center; justify-content:center; margin:0 auto 22px; position:relative; z-index:2;
+    font-family:var(--display); font-size:24px; box-shadow:var(--shadow);
+  }
+  .step h3 { font-size:17px; font-weight:800; margin-bottom:10px; }
+  .step p { color:var(--muted); font-size:14px; line-height:1.6; max-width:260px; margin:0 auto; }
+
+  /* live ticker */
+  .ticker-wrap { background:var(--navy); border-radius:var(--r-lg); overflow:hidden; margin-bottom:120px; box-shadow:var(--shadow-lg); }
+  .ticker-head { padding:16px 24px 0; display:flex; align-items:center; gap:8px; color:#fff; }
+  .ticker-head .dot { width:8px;height:8px;border-radius:50%;background:var(--live); animation:pulse 1.6s infinite; }
+  .ticker-head span { font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:rgba(255,255,255,.7); }
+  .ticker-track { display:flex; gap:40px; white-space:nowrap; width:max-content; padding:18px 24px; animation:scroll-x 28s linear infinite; }
+  .ticker-wrap:hover .ticker-track { animation-play-state:paused; }
+  .ticker-item { color:#fff; font-size:14px; font-weight:600; display:flex; align-items:center; gap:8px; }
+  .ticker-item b { color:var(--lime); }
+
+  /* testimonials */
+  .testi-wrap { max-width:720px; margin:0 auto 130px; text-align:center; position:relative; min-height:220px; }
+  .testi-card { position:absolute; inset:0; opacity:0; transform:translateY(12px); transition:opacity .5s, transform .5s; pointer-events:none; }
+  .testi-card.active { opacity:1; transform:translateY(0); pointer-events:auto; position:relative; }
+  .testi-quote { font-family:'Manrope',sans-serif; font-size:clamp(20px,2.6vw,28px); font-weight:700; letter-spacing:-.03em; line-height:1.4; margin-bottom:24px; }
+  .testi-who { display:flex; align-items:center; justify-content:center; gap:12px; }
+  .testi-avatar { width:40px;height:40px;border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:13px; color:#fff; }
+  .testi-name { font-weight:800; font-size:14px; }
+  .testi-role { color:var(--muted); font-size:12px; }
+  .testi-dots { display:flex; justify-content:center; gap:8px; margin-top:28px; }
+  .testi-dots button { width:7px; height:7px; border-radius:50%; border:0; background:var(--stroke-strong); padding:0; cursor:pointer; transition:.25s; }
+  .testi-dots button.active { background:var(--lime); width:22px; border-radius:6px; }
+
+  /* CTA band */
+  .cta-band {
+    position:relative; overflow:hidden; border-radius:var(--r-xl); padding:70px 32px; text-align:center; margin-bottom:64px;
+    background:linear-gradient(150deg,#12241a,#0b1410); box-shadow:var(--shadow-lg); color:#fff;
+  }
+  .cta-band .ambient { position:absolute; }
+  .cta-band h2 { font-family:var(--display); font-weight:400; text-transform:uppercase; font-size:clamp(32px,5vw,56px); line-height:1; margin-bottom:18px; position:relative; }
+  .cta-band p { color:rgba(255,255,255,.68); font-size:16px; margin-bottom:32px; position:relative; }
+  .cta-band .btn-primary { position:relative; }
+
+  /* footer */
+  footer { padding:40px 0 50px; border-top:1.5px solid var(--stroke); }
+  .foot-inner { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:20px; }
+  .foot-links { display:flex; gap:24px; flex-wrap:wrap; }
+  .foot-links a { font-size:13px; font-weight:700; color:var(--muted); transition:.2s; }
+  .foot-links a:hover { color:var(--ink); }
+  .foot-copy { font-size:12px; color:var(--muted); }
+
+  @media (max-width:860px) {
+    .nav-links { display:none; }
+    .menu-toggle { display:flex; }
+    .features { grid-template-columns:repeat(2,1fr); }
+    .stats { grid-template-columns:repeat(2,1fr); }
+    .steps { grid-template-columns:1fr; gap:36px; }
+    .steps:before { display:none; }
+    .hero-chips { display:none; }
+  }
+  @media (max-width:520px) {
+    .features { grid-template-columns:1fr; }
+    .hero { padding:44px 0 24px; }
+    .stats { border-radius:var(--r-md); }
+    .cta-band { padding:48px 20px; }
+    .nav-cta .btn-ghost { display:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="ambient" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+<div class="grain" aria-hidden="true"></div>
+
+<header class="nav-bar" id="navBar">
+  <div class="wrap nav-inner">
+    <a href="#top" class="brand"><i class="brand-mark"></i> PLAYYR</a>
+    <nav class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#how">How it works</a>
+      <a href="#sports">Sports</a>
+      <a href="#stories">Stories</a>
+    </nav>
+    <div class="nav-cta">
+      <a class="btn-ghost" href="index.html">Sign in</a>
+      <a class="btn-primary" href="index.html">Get started</a>
+      <button class="menu-toggle" id="menuToggle" aria-label="Open menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="hero" id="top">
+    <div class="wrap">
+      <div class="hero-badge"><i class="dot"></i> 340+ tournaments live right now</div>
+      <h1>Find your<br><em>people</em> to play.</h1>
+      <p class="sub">Challenges, tournaments and local crews — all built around the sports you love. Your city is your playground.</p>
+      <div class="hero-ctas">
+        <a class="btn-primary lg" href="index.html">Start playing free</a>
+        <a class="btn-ghost" href="#how" style="padding:19px 26px;font-size:13px;">See how it works</a>
+      </div>
+
+      <div class="hero-chips">
+        <div class="float-chip" style="left:0; top:-320px; --r:-6deg; animation-delay:.2s;"><span class="ic">⚽</span> HSR Strikers won 3–2</div>
+        <div class="float-chip" style="right:0; top:-300px; --r:5deg; animation-delay:.9s;"><span class="ic">🏆</span> City Showdown · Sat</div>
+        <div class="float-chip" style="left:2%; top:-90px; --r:4deg; animation-delay:1.5s;"><span class="ic">🔥</span> 12-day streak</div>
+        <div class="float-chip" style="right:1%; top:-70px; --r:-4deg; animation-delay:.6s;"><span class="ic">🏸</span> 5 players nearby</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <div class="stats reveal" id="statsBlock">
+      <div class="stat-cell"><div class="stat-num" data-count="12400" data-suffix="+">0</div><div class="stat-label">Active players</div></div>
+      <div class="stat-cell"><div class="stat-num" data-count="180" data-suffix="+">0</div><div class="stat-label">Cities</div></div>
+      <div class="stat-cell"><div class="stat-num" data-count="3200" data-suffix="+">0</div><div class="stat-label">Matches this month</div></div>
+      <div class="stat-cell"><div class="stat-num" data-count="340" data-suffix="+">0</div><div class="stat-label">Live tournaments</div></div>
+    </div>
+  </div>
+
+  <div class="marquee-wrap" id="sports">
+    <div class="marquee-track" id="marqueeTrack"></div>
+  </div>
+
+  <div class="wrap">
+    <section id="features">
+      <div class="section-head reveal">
+        <span class="eyebrow">Why PLAYYR</span>
+        <h2>Everything to keep<br>you in the game.</h2>
+        <p>One app for discovering players, joining tournaments, and never missing a match — built around the sports you already love.</p>
+      </div>
+      <div class="features">
+        <div class="feature-card reveal">
+          <div class="feature-icon" style="background:rgba(123,196,40,.14);">🧭</div>
+          <h3>Find your crew</h3>
+          <p>Discover players and teams near you, filtered by sport, skill and schedule.</p>
+        </div>
+        <div class="feature-card reveal" style="transition-delay:.05s">
+          <div class="feature-icon" style="background:rgba(15,172,104,.14);">🏆</div>
+          <h3>Join tournaments</h3>
+          <p>Register your team in minutes and track fixtures, results and the leaderboard live.</p>
+        </div>
+        <div class="feature-card reveal" style="transition-delay:.1s">
+          <div class="feature-icon" style="background:rgba(255,106,46,.14);">🔥</div>
+          <h3>Daily challenges</h3>
+          <p>Bite-sized goals that keep your streak alive and your XP climbing every day.</p>
+        </div>
+        <div class="feature-card reveal" style="transition-delay:.15s">
+          <div class="feature-icon" style="background:rgba(106,75,240,.14);">📣</div>
+          <h3>Host your own</h3>
+          <p>List a tournament, set the rules, and let nearby players come to you.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="how">
+      <div class="section-head reveal">
+        <span class="eyebrow">Getting started</span>
+        <h2>Three steps to<br>your first match.</h2>
+      </div>
+      <div class="steps">
+        <div class="step reveal">
+          <div class="step-num">1</div>
+          <h3>Create your account</h3>
+          <p>Sign up in seconds — just a username, email and password.</p>
+        </div>
+        <div class="step reveal" style="transition-delay:.08s">
+          <div class="step-num">2</div>
+          <h3>Pick your sports & city</h3>
+          <p>Choose 3–4 sports you play and set your home turf.</p>
+        </div>
+        <div class="step reveal" style="transition-delay:.16s">
+          <div class="step-num">3</div>
+          <h3>Start playing</h3>
+          <p>Get matched with local crews, join tournaments, and go.</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="ticker-wrap reveal">
+      <div class="ticker-head"><i class="dot"></i><span>Happening now</span></div>
+      <div class="ticker-track" id="tickerTrack"></div>
+    </div>
+
+    <section id="stories" class="testi-wrap reveal">
+      <div id="testiInner"></div>
+      <div class="testi-dots" id="testiDots"></div>
+    </section>
+
+    <div class="cta-band reveal">
+      <div class="ambient" aria-hidden="true"><i></i><i></i></div>
+      <h2>Ready to move?</h2>
+      <p>Your next match is closer than you think.</p>
+      <a class="btn-primary lg" href="index.html">Join PLAYYR — it's free</a>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot-inner">
+    <a href="#top" class="brand"><i class="brand-mark"></i> PLAYYR</a>
+    <div class="foot-links">
+      <a href="#features">Features</a>
+      <a href="#how">How it works</a>
+      <a href="index.html">Open app</a>
+    </div>
+    <div class="foot-copy">© 2026 PLAYYR. Your city is your playground.</div>
+  </div>
+</footer>
+
+<script>
+  // nav scroll shadow
+  const navBar = document.getElementById('navBar');
+  window.addEventListener('scroll', () => {
+    navBar.classList.toggle('scrolled', window.scrollY > 8);
+  }, { passive: true });
+
+  // mobile menu toggle -> reuse nav-links as a dropdown
+  const menuToggle = document.getElementById('menuToggle');
+  const navLinks = document.querySelector('.nav-links');
+  menuToggle.addEventListener('click', () => {
+    const open = navLinks.style.display === 'flex';
+    navLinks.style.display = open ? 'none' : 'flex';
+    navLinks.style.cssText += open ? '' : 'position:fixed;top:64px;left:16px;right:16px;background:var(--panel);border:1.5px solid var(--stroke);border-radius:16px;padding:18px;flex-direction:column;align-items:flex-start;gap:16px;box-shadow:var(--shadow-lg);z-index:60;';
+  });
+
+  // sports marquee (duplicated for seamless loop)
+  const SPORTS = [
+    ['⚽','Football'], ['🎮','BGMI'], ['🏏','Cricket'], ['🏸','Badminton'],
+    ['🏀','Basketball'], ['🎯','Free Fire'], ['🏃','Running'], ['🏐','Volleyball']
+  ];
+  const marquee = document.getElementById('marqueeTrack');
+  const marqueeHtml = SPORTS.map(([ic, name]) => `<div class="sport-pill"><span class="ic">${ic}</span>${name}</div>`).join('');
+  marquee.innerHTML = marqueeHtml + marqueeHtml;
+
+  // live ticker (duplicated for seamless loop)
+  const TICKER_ITEMS = [
+    'HSR Strikers <b>beat</b> Koramangala FC 3–2',
+    'Indiranagar CC <b>beat</b> Jayanagar XI by 4 wkts',
+    'Rush Seven <b>qualified</b> for the City Showdown',
+    '5 players <b>waiting</b> for a 5-a-side near you',
+    'Smash Arena <b>booked</b> for tonight, 7 PM',
+    'Weekend Warriors <b>hit</b> a 12-day streak'
+  ];
+  const ticker = document.getElementById('tickerTrack');
+  const tickerHtml = TICKER_ITEMS.map(t => `<span class="ticker-item">${t}</span>`).join('<span style="color:rgba(255,255,255,.25)">·</span>');
+  ticker.innerHTML = tickerHtml + '<span style="color:rgba(255,255,255,.25)">·</span>' + tickerHtml;
+
+  // testimonials
+  const TESTIMONIALS = [
+    { quote: '“Found a five-a-side crew in my area within a day. I play twice a week now.”', name: 'Vikram Kulkarni', role: 'Football · HSR Layout', initials: 'VK', color: '#7bc428' },
+    { quote: '“Hosted our first badminton tournament and had 40 players sign up in under a week.”', name: 'Sneha Nair', role: 'Badminton · Indiranagar', initials: 'SN', color: '#0fac68' },
+    { quote: '“The daily challenges are the only reason I haven’t skipped a workout this month.”', name: 'Rohit Sharma', role: 'BGMI · Koramangala', initials: 'RS', color: '#6a4bf0' }
+  ];
+  const testiInner = document.getElementById('testiInner');
+  const testiDots = document.getElementById('testiDots');
+  testiInner.innerHTML = TESTIMONIALS.map((t, i) => `
+    <div class="testi-card${i === 0 ? ' active' : ''}" data-i="${i}">
+      <p class="testi-quote">${t.quote}</p>
+      <div class="testi-who">
+        <div class="testi-avatar" style="background:${t.color}">${t.initials}</div>
+        <div style="text-align:left"><div class="testi-name">${t.name}</div><div class="testi-role">${t.role}</div></div>
+      </div>
+    </div>`).join('');
+  testiDots.innerHTML = TESTIMONIALS.map((_, i) => `<button data-i="${i}" class="${i === 0 ? 'active' : ''}" aria-label="Story ${i + 1}"></button>`).join('');
+
+  let testiIndex = 0;
+  const testiCards = () => Array.from(document.querySelectorAll('.testi-card'));
+  const testiDotEls = () => Array.from(document.querySelectorAll('.testi-dots button'));
+  function showTesti(i) {
+    testiIndex = i;
+    testiCards().forEach(c => c.classList.toggle('active', +c.dataset.i === i));
+    testiDotEls().forEach(d => d.classList.toggle('active', +d.dataset.i === i));
+  }
+  testiDotEls().forEach(d => d.addEventListener('click', () => showTesti(+d.dataset.i)));
+  let testiTimer = setInterval(() => showTesti((testiIndex + 1) % TESTIMONIALS.length), 4500);
+  document.getElementById('stories').addEventListener('mouseenter', () => clearInterval(testiTimer));
+  document.getElementById('stories').addEventListener('mouseleave', () => {
+    testiTimer = setInterval(() => showTesti((testiIndex + 1) % TESTIMONIALS.length), 4500);
+  });
+
+  // scroll reveal
+  const revealEls = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.15 });
+  revealEls.forEach(el => io.observe(el));
+  setTimeout(() => revealEls.forEach(el => el.classList.add('in')), 2500);
+
+  // animated stat counters
+  function animateCount(el) {
+    const target = +el.dataset.count;
+    const suffix = el.dataset.suffix || '';
+    const duration = 1400;
+    const start = performance.now();
+    function tick(now) {
+      const p = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(target * eased).toLocaleString() + suffix;
+      if (p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+  const statsBlock = document.getElementById('statsBlock');
+  const statsIo = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        document.querySelectorAll('.stat-num').forEach(animateCount);
+        statsIo.disconnect();
+      }
+    });
+  }, { threshold: 0.4 });
+  statsIo.observe(statsBlock);
+</script>
+</body>
+</html>
