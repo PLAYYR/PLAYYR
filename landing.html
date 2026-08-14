@@ -104,6 +104,49 @@
   .menu-toggle { display:none; border:1.5px solid var(--stroke-strong); background:var(--panel); border-radius:12px; padding:9px; cursor:pointer; }
   .menu-toggle svg { width:20px; height:20px; }
 
+  .badge-soon {
+    display:inline-flex; align-items:center; gap:7px; border:1.5px solid var(--stroke); background:var(--panel);
+    border-radius:999px; padding:9px 16px; font-size:12px; font-weight:800; letter-spacing:.04em; color:var(--muted);
+    box-shadow:var(--shadow);
+  }
+  .badge-soon.lg { padding:13px 22px; font-size:13px; }
+  .badge-soon .dot { width:7px;height:7px;border-radius:50%;background:var(--mint); flex:none; animation:pulse 1.8s infinite; }
+  .nav-cta .badge-soon { padding:9px 14px; }
+
+  /* sign-in modal */
+  .modal-backdrop {
+    position:fixed; inset:0; z-index:200; background:rgba(9,14,9,.55); backdrop-filter:blur(6px);
+    display:flex; align-items:center; justify-content:center; padding:20px;
+    opacity:1; transition:opacity .2s;
+  }
+  .modal-backdrop.hidden { display:none; }
+  .modal-card {
+    background:var(--panel); border-radius:var(--r-xl); padding:32px; width:100%; max-width:400px;
+    box-shadow:var(--shadow-lg); position:relative; text-align:left;
+    animation:modalIn .3s cubic-bezier(.2,.8,.2,1);
+  }
+  @keyframes modalIn { from { opacity:0; transform:translateY(14px) scale(.98); } to { opacity:1; transform:translateY(0) scale(1); } }
+  .modal-close {
+    position:absolute; top:18px; right:18px; border:0; background:var(--glass-3,#f1efe6); width:32px; height:32px;
+    border-radius:50%; font-size:18px; line-height:1; cursor:pointer; color:var(--muted);
+  }
+  .modal-card h3 { font-size:24px; font-weight:800; letter-spacing:-.03em; margin:10px 0 8px; }
+  .modal-sub { color:var(--muted); font-size:13px; line-height:1.5; margin-bottom:24px; }
+  .field { margin-bottom:16px; }
+  .field label { display:block; font-size:10px; font-weight:800; letter-spacing:.14em; color:var(--muted); margin-bottom:7px; }
+  .field input {
+    width:100%; border:1.5px solid var(--stroke); border-radius:var(--r-sm); padding:14px 16px; font-size:14px;
+    background:var(--glass-3,#f1efe6); color:var(--ink); transition:.2s;
+  }
+  .field input:focus { outline:none; border-color:var(--lime); background:var(--panel); }
+  .modal-error {
+    color:#c7473a; font-size:12px; font-weight:700; margin:-6px 0 14px; padding:10px 12px;
+    background:rgba(199,71,58,.08); border-radius:10px;
+  }
+  .modal-error.hidden { display:none; }
+  .modal-card .btn-primary { width:100%; }
+  .modal-card .btn-primary:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+
   /* hero */
   .hero { padding:64px 0 40px; text-align:center; position:relative; }
   .hero-badge {
@@ -248,7 +291,7 @@
     .hero { padding:44px 0 24px; }
     .stats { border-radius:var(--r-md); }
     .cta-band { padding:48px 20px; }
-    .nav-cta .btn-ghost { display:none; }
+    .nav-cta .badge-soon { display:none; }
   }
 </style>
 </head>
@@ -267,8 +310,8 @@
       <a href="#stories">Stories</a>
     </nav>
     <div class="nav-cta">
-      <a class="btn-ghost" href="index.html">Sign in</a>
-      <a class="btn-primary" href="index.html">Get started</a>
+      <span class="badge-soon"><i class="dot"></i>Launching soon</span>
+      <button class="btn-primary" type="button" id="navSignIn">Sign in</button>
       <button class="menu-toggle" id="menuToggle" aria-label="Open menu">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
       </button>
@@ -279,11 +322,12 @@
 <main>
   <section class="hero" id="top">
     <div class="wrap">
-      <div class="hero-badge"><i class="dot"></i> 340+ tournaments live right now</div>
+      <div class="hero-badge"><i class="dot"></i> Launching soon</div>
       <h1>Find your<br><em>people</em> to play.</h1>
       <p class="sub">Challenges, tournaments and local crews — all built around the sports you love. Your city is your playground.</p>
       <div class="hero-ctas">
-        <a class="btn-primary lg" href="index.html">Start playing free</a>
+        <span class="badge-soon lg"><i class="dot"></i>Launching soon</span>
+        <button class="btn-primary lg" type="button" id="heroSignIn">Sign in</button>
         <a class="btn-ghost" href="#how" style="padding:19px 26px;font-size:13px;">See how it works</a>
       </div>
 
@@ -376,9 +420,9 @@
 
     <div class="cta-band reveal">
       <div class="ambient" aria-hidden="true"><i></i><i></i></div>
-      <h2>Ready to move?</h2>
-      <p>Your next match is closer than you think.</p>
-      <a class="btn-primary lg" href="index.html">Join PLAYYR — it's free</a>
+      <h2>Launching soon.</h2>
+      <p>We're putting the finishing touches on your city's playground. Already have an account?</p>
+      <button class="btn-primary lg" type="button" id="ctaSignIn">Sign in</button>
     </div>
   </div>
 </main>
@@ -395,7 +439,68 @@
   </div>
 </footer>
 
+<div class="modal-backdrop hidden" id="signInModal">
+  <div class="modal-card">
+    <button class="modal-close" id="closeSignIn" type="button" aria-label="Close">&times;</button>
+    <span class="eyebrow">Welcome back</span>
+    <h3>Sign in to PLAYYR</h3>
+    <p class="modal-sub">PLAYYR is launching soon — sign in here if you already have an account.</p>
+    <form id="landingSignInForm">
+      <div class="field"><label for="lsEmail">EMAIL</label><input id="lsEmail" type="email" required placeholder="you@email.com" autocomplete="email"></div>
+      <div class="field"><label for="lsPassword">PASSWORD</label><input id="lsPassword" type="password" required placeholder="Your password" autocomplete="current-password"></div>
+      <p class="modal-error hidden" id="lsError"></p>
+      <button class="btn-primary" type="submit" id="lsSubmit">Sign in</button>
+    </form>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
+  // Supabase auth (same project as the app)
+  const sb = window.supabase.createClient(
+    'https://xnqhyzogskfoexjbkjov.supabase.co',
+    'sb_publishable_fQGxHiLcUerzFShQEkqQNQ_90rY0jfN'
+  );
+
+  const signInModal = document.getElementById('signInModal');
+  function openSignIn() {
+    signInModal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    document.getElementById('lsEmail').focus();
+  }
+  function closeSignIn() {
+    signInModal.classList.add('hidden');
+    document.body.style.overflow = '';
+    document.getElementById('lsError').classList.add('hidden');
+  }
+  ['navSignIn', 'heroSignIn', 'ctaSignIn'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.onclick = openSignIn;
+  });
+  document.getElementById('closeSignIn').onclick = closeSignIn;
+  signInModal.addEventListener('click', e => { if (e.target === signInModal) closeSignIn(); });
+  window.addEventListener('keydown', e => { if (e.key === 'Escape' && !signInModal.classList.contains('hidden')) closeSignIn(); });
+
+  document.getElementById('landingSignInForm').onsubmit = async event => {
+    event.preventDefault();
+    const email = document.getElementById('lsEmail').value.trim();
+    const password = document.getElementById('lsPassword').value;
+    const errEl = document.getElementById('lsError');
+    const submitBtn = document.getElementById('lsSubmit');
+    errEl.classList.add('hidden');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Signing in…';
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) {
+      errEl.textContent = 'Email or password is incorrect';
+      errEl.classList.remove('hidden');
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Sign in';
+      return;
+    }
+    window.location.href = 'index.html';
+  };
+
   // nav scroll shadow
   const navBar = document.getElementById('navBar');
   window.addEventListener('scroll', () => {
