@@ -471,7 +471,7 @@ document.getElementById('useLocation').onclick = () => {
   );
 };
 
-function navigateTo(pageId) { const page = document.getElementById(pageId); if (!page) return; document.querySelectorAll('.nav button').forEach(item => item.classList.toggle('active', item.dataset.page === pageId)); document.querySelectorAll('.page').forEach(el => el.classList.add('hidden')); page.classList.remove('hidden'); window.scrollTo({top:0,behavior:'smooth'}); }
+function navigateTo(pageId) { const page = document.getElementById(pageId); if (!page) return; document.querySelectorAll('.nav button').forEach(item => item.classList.toggle('active', item.dataset.page === pageId)); document.querySelectorAll('.page').forEach(el => el.classList.add('hidden')); page.classList.remove('hidden'); if (pageId === 'findPage') loadListedPlays(); window.scrollTo({top:0,behavior:'smooth'}); }
 document.querySelectorAll('.nav button').forEach(button => button.onclick = () => navigateTo(button.dataset.page));
 const escapeHtml = value => String(value || '').replace(/[&<>'"]/g, character => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' })[character]);
 const initialsFor = value => String(value || 'Player').trim().split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase() || 'PL';
@@ -494,6 +494,25 @@ function openStaticFindTeamDetails(card) {
 }
 
 document.querySelectorAll('.static-team-details').forEach(button => button.onclick = () => openStaticFindTeamDetails(button.closest('.team')));
+
+async function loadListedPlays() {
+  const container = document.getElementById('listedPlays');
+  if (!container) return;
+  const { data, error } = await sb.from('play_listings').select('id,name,sport,level,venue,schedule,open_spots,created_at').order('created_at', { ascending:false });
+  if (error) {
+    container.innerHTML = '<div class="empty-state"><strong>Could not load listed plays</strong><span>Pull down or reopen Find to try again.</span></div>';
+    return;
+  }
+  const plays = data || [];
+  if (!plays.length) {
+    container.innerHTML = '<div class="empty-state"><strong>No community plays listed yet</strong><span>Use List your play to start one nearby.</span></div>';
+    return;
+  }
+  container.innerHTML = plays.map(play => `<article class="team listed-play" data-sport="${escapeHtml(play.sport)}"><div class="team-head"><div class="team-logo">${escapeHtml((sportIcons[play.sport] || '•'))}</div><div><h3>${escapeHtml(play.name)}</h3><span class="sport-name">${escapeHtml(play.sport)} · Community play</span></div><span class="open">${play.open_spots} SPOTS</span></div><div class="team-details"><div class="detail"><span>Venue</span><b>${escapeHtml(play.venue)}</b></div><div class="detail"><span>Plays</span><b>${escapeHtml(play.schedule)}</b></div><div class="detail"><span>Level</span><b>${escapeHtml(play.level)}</b></div></div><div class="team-foot"><div class="members"><span>Listed on PLAYYR</span></div><div class="team-foot-actions"><button class="secondary-btn listed-play-details" type="button">View details</button><button class="small-btn action" data-message="Interest sent for ${escapeHtml(play.name)}!">I’m interested</button></div></div></article>`).join('');
+  container.querySelectorAll('.listed-play-details').forEach(button => button.onclick = () => openStaticFindTeamDetails(button.closest('.team')));
+  container.querySelectorAll('.action').forEach(button => button.onclick = () => toast(button.dataset.message));
+  filterFindTeams(document.querySelector('#findFilters .chip.active')?.dataset.filter || 'All nearby');
+}
 
 async function openPublicProfile(userId) {
   const { data, error } = await sb.rpc('get_public_profile', { p_user_id:userId });
@@ -1258,12 +1277,31 @@ if (teamModal) teamModal.onclick = event => {
 };
 
 const teamForm = document.getElementById('teamForm');
-if (teamForm) teamForm.onsubmit = event => {
+if (teamForm) teamForm.onsubmit = async event => {
   event.preventDefault();
   const name = document.getElementById('teamName').value.trim();
-  closeTeamListing();
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return toast('Sign in to list your play');
+  const submit = event.submitter || teamForm.querySelector('[type="submit"]');
+  submit.disabled = true;
+  submit.textContent = 'Listing...';
+  const listing = {
+    creator_id:user.id,
+    name,
+    sport:document.getElementById('teamSport').value,
+    level:document.getElementById('teamLevel').value,
+    venue:document.getElementById('teamVenue').value.trim(),
+    schedule:document.getElementById('teamSchedule').value.trim(),
+    open_spots:Number(document.getElementById('teamOpenings').value) || 0
+  };
+  const { error } = await sb.from('play_listings').insert(listing);
+  submit.disabled = false;
+  submit.textContent = 'List your play';
+  if (error) return toast(error.message || 'Could not list your play');
   event.target.reset();
-  toast(`${name} submitted for review`);
+  closeTeamListing();
+  await loadListedPlays();
+  toast(`${name} is now live in Find`);
 };
 
 function renderSettingsPreferences() {
