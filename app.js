@@ -498,7 +498,8 @@ document.querySelectorAll('.static-team-details').forEach(button => button.oncli
 async function loadListedPlays() {
   const container = document.getElementById('listedPlays');
   if (!container) return;
-  const { data, error } = await sb.from('play_listings').select('id,name,sport,level,venue,schedule,open_spots,created_at').order('created_at', { ascending:false });
+  const { data: { user } } = await sb.auth.getUser();
+  const { data, error } = await sb.from('play_listings').select('id,creator_id,name,sport,level,venue,schedule,open_spots,created_at').order('created_at', { ascending:false });
   if (error) {
     container.innerHTML = '<div class="empty-state"><strong>Could not load listed plays</strong><span>Pull down or reopen Find to try again.</span></div>';
     return;
@@ -508,9 +509,33 @@ async function loadListedPlays() {
     container.innerHTML = '<div class="empty-state"><strong>No community plays listed yet</strong><span>Use List your play to start one nearby.</span></div>';
     return;
   }
-  container.innerHTML = plays.map(play => `<article class="team listed-play" data-sport="${escapeHtml(play.sport)}"><div class="team-head"><div class="team-logo">${escapeHtml((sportIcons[play.sport] || '•'))}</div><div><h3>${escapeHtml(play.name)}</h3><span class="sport-name">${escapeHtml(play.sport)} · Community play</span></div><span class="open">${play.open_spots} SPOTS</span></div><div class="team-details"><div class="detail"><span>Venue</span><b>${escapeHtml(play.venue)}</b></div><div class="detail"><span>Plays</span><b>${escapeHtml(play.schedule)}</b></div><div class="detail"><span>Level</span><b>${escapeHtml(play.level)}</b></div></div><div class="team-foot"><div class="members"><span>Listed on PLAYYR</span></div><div class="team-foot-actions"><button class="secondary-btn listed-play-details" type="button">View details</button><button class="small-btn action" data-message="Interest sent for ${escapeHtml(play.name)}!">I’m interested</button></div></div></article>`).join('');
+  const creatorProfiles = new Map();
+  await Promise.all([...new Set(plays.map(play => play.creator_id))].map(async creatorId => {
+    const { data: profileRows } = await sb.rpc('get_public_profile', { p_user_id:creatorId });
+    const profile = Array.isArray(profileRows) ? profileRows[0] : profileRows;
+    if (profile) creatorProfiles.set(creatorId, profile);
+  }));
+  container.innerHTML = plays.map(play => {
+    const isOwner = user?.id === play.creator_id;
+    const creator = creatorProfiles.get(play.creator_id);
+    const creatorName = creator?.full_name || (isOwner ? 'You' : 'Private PLAYYR player');
+    const creatorButton = creator ? `<button class="play-creator" type="button" data-creator-profile="${play.creator_id}"><i>${escapeHtml(initialsFor(creatorName))}</i><span><small>Created by</small><strong>${escapeHtml(isOwner ? `${creatorName} · You` : creatorName)}</strong></span></button>` : `<div class="play-creator"><i>PL</i><span><small>Created by</small><strong>${escapeHtml(creatorName)}</strong></span></div>`;
+    const rightActions = isOwner
+      ? `<span class="your-play-pill">Your listing</span><button class="secondary-btn delete-play" type="button" data-delete-play="${play.id}">Delete</button>`
+      : `<button class="small-btn interest-play" type="button" data-creator-name="${escapeHtml(creatorName)}">I’m interested</button>`;
+    return `<article class="team listed-play" data-sport="${escapeHtml(play.sport)}"><div class="team-head"><div class="team-logo">${escapeHtml((sportIcons[play.sport] || '•'))}</div><div><h3>${escapeHtml(play.name)}</h3><span class="sport-name">${escapeHtml(play.sport)} · Community play</span></div><span class="open">${play.open_spots} SPOTS</span></div><div class="team-details"><div class="detail"><span>Venue</span><b>${escapeHtml(play.venue)}</b></div><div class="detail"><span>Plays</span><b>${escapeHtml(play.schedule)}</b></div><div class="detail"><span>Level</span><b>${escapeHtml(play.level)}</b></div></div>${creatorButton}<div class="team-foot"><div class="members"><span>Listed on PLAYYR</span></div><div class="team-foot-actions"><button class="secondary-btn listed-play-details" type="button">View details</button>${rightActions}</div></div></article>`;
+  }).join('');
   container.querySelectorAll('.listed-play-details').forEach(button => button.onclick = () => openStaticFindTeamDetails(button.closest('.team')));
-  container.querySelectorAll('.action').forEach(button => button.onclick = () => toast(button.dataset.message));
+  container.querySelectorAll('[data-creator-profile]').forEach(button => button.onclick = () => openPublicProfile(button.dataset.creatorProfile));
+  container.querySelectorAll('.interest-play').forEach(button => button.onclick = () => toast(`Interest sent to ${button.dataset.creatorName}`));
+  container.querySelectorAll('[data-delete-play]').forEach(button => button.onclick = async () => {
+    if (!window.confirm('Delete this play listing?')) return;
+    button.disabled = true;
+    const { error: deleteError } = await sb.from('play_listings').delete().eq('id', button.dataset.deletePlay);
+    if (deleteError) { button.disabled = false; return toast(deleteError.message || 'Could not delete this play'); }
+    toast('Play listing deleted');
+    await loadListedPlays();
+  });
   filterFindTeams(document.querySelector('#findFilters .chip.active')?.dataset.filter || 'All nearby');
 }
 
