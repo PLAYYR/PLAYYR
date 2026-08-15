@@ -200,6 +200,11 @@ function applyProfile(profile) {
   setText('settingsAccount', profile.email || 'Your PLAYYR account');
   const settingsName = document.getElementById('settingsNameInput');
   if (settingsName) settingsName.value = profile.full_name;
+  const settingsBio = document.getElementById('settingsBioInput');
+  if (settingsBio) {
+    settingsBio.value = profile.bio || '';
+    setText('settingsBioCount', `${settingsBio.value.length} / 300`);
+  }
   if (profile.city) {
     document.querySelectorAll('.cityText').forEach(el => el.textContent = profile.city);
     setText('leaderboardCity', profile.city);
@@ -466,10 +471,66 @@ document.getElementById('useLocation').onclick = () => {
   );
 };
 
-function navigateTo(pageId) { const page = document.getElementById(pageId); if (!page) return; document.querySelectorAll('.nav button').forEach(item => item.classList.toggle('active', item.dataset.page === pageId)); document.querySelectorAll('.page').forEach(el => el.classList.add('hidden')); page.classList.remove('hidden'); window.scrollTo({top:0,behavior:'smooth'}); }
+function navigateTo(pageId) { const page = document.getElementById(pageId); if (!page) return; document.querySelectorAll('.nav button').forEach(item => item.classList.toggle('active', item.dataset.page === pageId)); document.querySelectorAll('.page').forEach(el => el.classList.add('hidden')); page.classList.remove('hidden'); if (pageId === 'findPage') loadFindTeams(); window.scrollTo({top:0,behavior:'smooth'}); }
 document.querySelectorAll('.nav button').forEach(button => button.onclick = () => navigateTo(button.dataset.page));
 const escapeHtml = value => String(value || '').replace(/[&<>'"]/g, character => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' })[character]);
 const initialsFor = value => String(value || 'Player').trim().split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase() || 'PL';
+
+let findTeamsCache = [];
+async function loadFindTeams() {
+  const container = document.getElementById('findRealTeams');
+  if (!container) return;
+  container.innerHTML = '<div class="empty-state"><strong>Loading nearby teams</strong><span>Finding discoverable PLAYYR teams...</span></div>';
+  const { data, error } = await sb.rpc('get_find_teams');
+  if (error) {
+    container.innerHTML = '<div class="empty-state"><strong>Could not load live teams</strong><span>Please try again in a moment.</span></div>';
+    return;
+  }
+  findTeamsCache = data || [];
+  if (!findTeamsCache.length) {
+    container.innerHTML = '<div class="empty-state"><strong>No public teams yet</strong><span>Make a team and enable discovery to appear here.</span></div>';
+    return;
+  }
+  container.innerHTML = findTeamsCache.map(team => `<article class="team" data-sport="${escapeHtml(team.sport)}"><div class="find-team-summary"><div class="team-logo">${escapeHtml(initialsFor(team.team_name))}</div><div><h3>${escapeHtml(team.team_name)}</h3><p>${escapeHtml(sportIcons[team.sport] || '')} ${escapeHtml(team.sport)} · ${team.member_count}/${team.max_members} players</p></div><span class="open">PLAYYR</span></div><div class="find-team-actions"><button class="secondary-btn" type="button" data-find-team="${team.team_id}">View details</button></div></article>`).join('');
+  container.querySelectorAll('[data-find-team]').forEach(button => button.onclick = () => openFindTeamDetails(button.dataset.findTeam));
+  filterFindTeams(document.querySelector('#findFilters .chip.active')?.dataset.filter || 'All nearby');
+}
+
+function setModalOpen(modal, open) {
+  if (!modal) return;
+  modal.classList.toggle('hidden', !open);
+  document.body.style.overflow = open ? 'hidden' : '';
+}
+
+function openFindTeamDetails(teamId) {
+  const team = findTeamsCache.find(item => item.team_id === teamId);
+  if (!team) return toast('Team details are unavailable');
+  setText('findTeamDetailsTitle', team.team_name);
+  setText('findTeamDetailsMeta', `${sportIcons[team.sport] || ''} ${team.sport} · ${team.member_count}/${team.max_members} players`);
+  const roster = document.getElementById('findTeamRoster');
+  const members = Array.isArray(team.members) ? team.members : [];
+  roster.innerHTML = members.length ? members.map(member => `<button class="profile-row" type="button" data-public-profile="${member.id}"><i>${escapeHtml(initialsFor(member.full_name))}</i><span><strong>${escapeHtml(member.full_name)}</strong><small>${escapeHtml(member.city || 'PLAYYR member')}</small></span><b>›</b></button>`).join('') : '<div class="empty-state"><strong>No public profiles</strong><span>Members can enable discovery in Settings.</span></div>';
+  roster.querySelectorAll('[data-public-profile]').forEach(button => button.onclick = () => openPublicProfile(button.dataset.publicProfile));
+  setModalOpen(document.getElementById('findTeamDetailsModal'), true);
+}
+
+async function openPublicProfile(userId) {
+  const { data, error } = await sb.rpc('get_public_profile', { p_user_id:userId });
+  const profile = Array.isArray(data) ? data[0] : data;
+  if (error || !profile) return toast('This profile is private');
+  setText('publicProfileAvatar', initialsFor(profile.full_name));
+  setText('publicProfileName', profile.full_name || 'PLAYYR player');
+  setText('publicProfileCity', profile.city || 'PLAYYR member');
+  setText('publicProfileBio', profile.bio || 'No bio added yet.');
+  const sportsList = document.getElementById('publicProfileSports');
+  sportsList.innerHTML = (profile.sports || []).map(name => `<span>${escapeHtml(sportIcons[name] || '')} ${escapeHtml(name)}</span>`).join('') || '<span>No sports shared</span>';
+  setModalOpen(document.getElementById('publicProfileModal'), true);
+}
+
+['closeFindTeamDetails','closeFindTeamDetailsBottom'].forEach(id => document.getElementById(id)?.addEventListener('click', () => setModalOpen(document.getElementById('findTeamDetailsModal'), false)));
+['closePublicProfile','closePublicProfileBottom'].forEach(id => document.getElementById(id)?.addEventListener('click', () => setModalOpen(document.getElementById('publicProfileModal'), false)));
+document.getElementById('findTeamDetailsModal')?.addEventListener('click', event => { if (event.target === event.currentTarget) setModalOpen(event.currentTarget, false); });
+document.getElementById('publicProfileModal')?.addEventListener('click', event => { if (event.target === event.currentTarget) setModalOpen(event.currentTarget, false); });
 
 async function loadYourTeams() {
   const list = document.getElementById('yourTeamsList');
@@ -1267,6 +1328,20 @@ if (themeSetting) {
 
 const saveSettingsCity = document.getElementById('saveSettingsCity');
 const saveSettingsName = document.getElementById('saveSettingsName');
+const settingsBioInput = document.getElementById('settingsBioInput');
+const saveSettingsBio = document.getElementById('saveSettingsBio');
+if (settingsBioInput) settingsBioInput.oninput = () => setText('settingsBioCount', `${settingsBioInput.value.length} / 300`);
+if (saveSettingsBio) saveSettingsBio.onclick = async () => {
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return toast('Sign in to update your bio');
+  const bio = settingsBioInput.value.trim();
+  saveSettingsBio.disabled = true;
+  saveSettingsBio.textContent = 'Saving...';
+  const { error } = await sb.from('profiles').upsert({ id:user.id, bio }, { onConflict:'id' });
+  saveSettingsBio.disabled = false;
+  saveSettingsBio.textContent = 'Save bio';
+  toast(error ? (error.message || 'Could not save your bio') : 'Bio updated');
+};
 if (saveSettingsName) saveSettingsName.onclick = async () => {
   const input = document.getElementById('settingsNameInput');
   const fullName = input.value.trim().replace(/\s+/g, ' ');
