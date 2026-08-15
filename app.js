@@ -89,6 +89,29 @@ function localDateKey(date = new Date()) {
   return `${year}-${month}-${day}`;
 }
 
+function localWeekKey(date = new Date()) {
+  const start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const daysSinceMonday = (start.getDay() + 6) % 7;
+  start.setDate(start.getDate() - daysSinceMonday);
+  return localDateKey(start);
+}
+
+function renderActivityStats(metadata = {}) {
+  const currentWeek = localWeekKey();
+  const recordedThisWeek = metadata.playyr_activity_week === currentWeek;
+  const completedToday = metadata.playyr_last_activity_date === localDateKey();
+  const challenges = recordedThisWeek
+    ? Math.max(0, Number(metadata.playyr_week_challenges) || 0)
+    : (completedToday ? 1 : 0);
+  const activeMinutes = recordedThisWeek
+    ? Math.max(0, Number(metadata.playyr_week_active_minutes) || 0)
+    : (completedToday ? 30 : 0);
+  setText('challengesStat', challenges);
+  setText('activeTimeStat', activeMinutes >= 60
+    ? `${Math.floor(activeMinutes / 60)}h ${activeMinutes % 60}m`
+    : `${activeMinutes}m`);
+}
+
 function renderStreak(metadata = {}) {
   const count = Math.max(0, Number(metadata.playyr_streak_count) || 0);
   const completedToday = metadata.playyr_last_activity_date === localDateKey();
@@ -105,6 +128,7 @@ function renderStreak(metadata = {}) {
   const trophy = document.getElementById('streakTrophy');
   if (trophy) trophy.classList.toggle('locked', count < 30);
   setText('streakTrophyStatus', count >= 30 ? 'Unlocked' : `${count}/30 days`);
+  renderActivityStats(metadata);
 }
 
 function closeProfilePrompt() {
@@ -1109,9 +1133,14 @@ if (dailyChallengeButton) dailyChallengeButton.onclick = async () => {
   yesterday.setDate(yesterday.getDate() - 1);
   const continued = metadata.playyr_last_activity_date === localDateKey(yesterday);
   const nextCount = continued ? (Number(metadata.playyr_streak_count) || 0) + 1 : 1;
+  const currentWeek = localWeekKey();
+  const sameActivityWeek = metadata.playyr_activity_week === currentWeek;
   const streakUpdate = {
     playyr_streak_count: nextCount,
-    playyr_last_activity_date: today
+    playyr_last_activity_date: today,
+    playyr_activity_week: currentWeek,
+    playyr_week_challenges: sameActivityWeek ? (Number(metadata.playyr_week_challenges) || 0) + 1 : 1,
+    playyr_week_active_minutes: sameActivityWeek ? (Number(metadata.playyr_week_active_minutes) || 0) + 30 : 30
   };
   const nextMetadata = { ...metadata, ...streakUpdate };
   const { error } = await sb.auth.updateUser({ data: streakUpdate });
