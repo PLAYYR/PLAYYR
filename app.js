@@ -488,23 +488,32 @@ function openStaticFindTeamDetails(card) {
   const memberCount = card.querySelector('.members span')?.textContent?.trim() || 'Members';
   setText('findTeamDetailsTitle', name);
   setText('findTeamDetailsMeta', `${sport} · ${memberCount}`);
-  const details = [...card.querySelectorAll('.detail')].map(item => `<div class="detail-chip"><span>${escapeHtml(item.querySelector('span')?.textContent || 'Details')}</span><b>${escapeHtml(item.querySelector('b')?.textContent || '')}</b></div>`).join('');
-  document.getElementById('findTeamRoster').innerHTML = `<div class="detail-grid">${details}</div><div class="empty-state"><strong>Player profiles coming from live members</strong><span>Profiles will appear here when this team is connected to a PLAYYR account.</span></div>`;
+  const detailItems = [...card.querySelectorAll('.detail')];
+  const venue = detailItems.find(item => /venue|ground|lobby/i.test(item.querySelector('span')?.textContent || ''))?.querySelector('b')?.textContent?.trim() || 'Venue not provided';
+  const schedule = detailItems.find(item => /plays/i.test(item.querySelector('span')?.textContent || ''))?.querySelector('b')?.textContent?.trim() || 'Schedule not provided';
+  setText('findDetailsVenue', `📍 ${venue}`);
+  setText('findDetailsSchedule', `🕒 ${schedule}`);
+  document.getElementById('findDetailsMapsLink').href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venue)}`;
+  document.getElementById('findDetailsGrid').innerHTML = detailItems.map(item => `<div class="detail-chip"><span>${escapeHtml(item.querySelector('span')?.textContent || 'Details')}</span><b>${escapeHtml(item.querySelector('b')?.textContent || '')}</b></div>`).join('');
+  setText('findMembersCount', 'Profiles unavailable');
+  document.getElementById('findTeamRoster').innerHTML = '<div class="empty-state"><strong>No connected member profiles yet</strong><span>Profiles will appear when this listing is connected to PLAYYR members.</span></div>';
   setModalOpen(document.getElementById('findTeamDetailsModal'), true);
 }
 
 document.querySelectorAll('.static-team-details').forEach(button => button.onclick = () => openStaticFindTeamDetails(button.closest('.team')));
 
+let listedPlaysCache = [];
 async function loadListedPlays() {
   const container = document.getElementById('listedPlays');
   if (!container) return;
   const { data: { user } } = await sb.auth.getUser();
-  const { data, error } = await sb.from('play_listings').select('id,creator_id,name,sport,level,venue,schedule,open_spots,created_at').order('created_at', { ascending:false });
+  const { data, error } = await sb.from('play_listings').select('id,creator_id,name,sport,level,venue,schedule,open_spots,created_at,play_members(user_id,joined_at)').order('created_at', { ascending:false });
   if (error) {
     container.innerHTML = '<div class="empty-state"><strong>Could not load listed plays</strong><span>Pull down or reopen Find to try again.</span></div>';
     return;
   }
   const plays = data || [];
+  listedPlaysCache = plays;
   if (!plays.length) {
     container.innerHTML = '<div class="empty-state"><strong>No community plays listed yet</strong><span>Use List your play to start one nearby.</span></div>';
     return;
@@ -520,14 +529,24 @@ async function loadListedPlays() {
     const creator = creatorProfiles.get(play.creator_id);
     const creatorName = creator?.full_name || (isOwner ? 'You' : 'Private PLAYYR player');
     const creatorButton = creator ? `<button class="play-creator" type="button" data-creator-profile="${play.creator_id}"><i>${escapeHtml(initialsFor(creatorName))}</i><span><small>Created by</small><strong>${escapeHtml(isOwner ? `${creatorName} · You` : creatorName)}</strong></span></button>` : `<div class="play-creator"><i>PL</i><span><small>Created by</small><strong>${escapeHtml(creatorName)}</strong></span></div>`;
+    const isMember = (play.play_members || []).some(member => member.user_id === user?.id);
     const rightActions = isOwner
       ? `<span class="your-play-pill">Your listing</span><button class="secondary-btn delete-play" type="button" data-delete-play="${play.id}">Delete</button>`
-      : `<button class="small-btn interest-play" type="button" data-creator-name="${escapeHtml(creatorName)}">I’m interested</button>`;
-    return `<article class="team listed-play" data-sport="${escapeHtml(play.sport)}"><div class="team-head"><div class="team-logo">${escapeHtml((sportIcons[play.sport] || '•'))}</div><div><h3>${escapeHtml(play.name)}</h3><span class="sport-name">${escapeHtml(play.sport)} · Community play</span></div><span class="open">${play.open_spots} SPOTS</span></div><div class="team-details"><div class="detail"><span>Venue</span><b>${escapeHtml(play.venue)}</b></div><div class="detail"><span>Plays</span><b>${escapeHtml(play.schedule)}</b></div><div class="detail"><span>Level</span><b>${escapeHtml(play.level)}</b></div></div>${creatorButton}<div class="team-foot"><div class="members"><span>Listed on PLAYYR</span></div><div class="team-foot-actions"><button class="secondary-btn listed-play-details" type="button">View details</button>${rightActions}</div></div></article>`;
+      : `<button class="small-btn interest-play" type="button" data-listing-id="${play.id}"${isMember ? ' disabled' : ''}>${isMember ? 'Interested ✓' : 'I’m interested'}</button>`;
+    const memberTotal = 1 + (play.play_members || []).filter(member => member.user_id !== play.creator_id).length;
+    return `<article class="team listed-play" data-listing-id="${play.id}" data-sport="${escapeHtml(play.sport)}"><div class="team-head"><div class="team-logo">${escapeHtml((sportIcons[play.sport] || '•'))}</div><div><h3>${escapeHtml(play.name)}</h3><span class="sport-name">${escapeHtml(play.sport)} · Community play</span></div><span class="open">${play.open_spots} SPOTS</span></div><div class="team-details"><div class="detail"><span>Venue</span><b>${escapeHtml(play.venue)}</b></div><div class="detail"><span>Plays</span><b>${escapeHtml(play.schedule)}</b></div><div class="detail"><span>Level</span><b>${escapeHtml(play.level)}</b></div></div>${creatorButton}<div class="team-foot"><div class="members"><span>${memberTotal} member${memberTotal === 1 ? '' : 's'}</span></div><div class="team-foot-actions"><button class="secondary-btn listed-play-details" type="button">View details</button>${rightActions}</div></div></article>`;
   }).join('');
-  container.querySelectorAll('.listed-play-details').forEach(button => button.onclick = () => openStaticFindTeamDetails(button.closest('.team')));
+  container.querySelectorAll('.listed-play-details').forEach(button => button.onclick = () => openListedPlayDetails(button.closest('.team').dataset.listingId));
   container.querySelectorAll('[data-creator-profile]').forEach(button => button.onclick = () => openPublicProfile(button.dataset.creatorProfile));
-  container.querySelectorAll('.interest-play').forEach(button => button.onclick = () => toast(`Interest sent to ${button.dataset.creatorName}`));
+  container.querySelectorAll('.interest-play:not(:disabled)').forEach(button => button.onclick = async () => {
+    if (!user) return toast('Sign in to join this play');
+    button.disabled = true;
+    button.textContent = 'Joining...';
+    const { error: joinError } = await sb.from('play_members').insert({ listing_id:button.dataset.listingId, user_id:user.id });
+    if (joinError && joinError.code !== '23505') { button.disabled = false;button.textContent = 'I’m interested';return toast(joinError.message || 'Could not join this play'); }
+    toast('You were added to the play members');
+    await loadListedPlays();
+  });
   container.querySelectorAll('[data-delete-play]').forEach(button => button.onclick = async () => {
     if (!window.confirm('Delete this play listing?')) return;
     button.disabled = true;
@@ -537,6 +556,29 @@ async function loadListedPlays() {
     await loadListedPlays();
   });
   filterFindTeams(document.querySelector('#findFilters .chip.active')?.dataset.filter || 'All nearby');
+}
+
+async function openListedPlayDetails(listingId) {
+  const play = listedPlaysCache.find(item => item.id === listingId);
+  if (!play) return toast('Play details are unavailable');
+  setText('findTeamDetailsTitle', play.name);
+  setText('findTeamDetailsMeta', `${sportIcons[play.sport] || ''} ${play.sport} · ${play.level}`);
+  setText('findDetailsVenue', `📍 ${play.venue}`);
+  setText('findDetailsSchedule', `🕒 ${play.schedule}`);
+  document.getElementById('findDetailsMapsLink').href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(play.venue)}`;
+  document.getElementById('findDetailsGrid').innerHTML = `<div class="detail-chip"><span>Level</span><b>${escapeHtml(play.level)}</b></div><div class="detail-chip"><span>Open spots</span><b>${play.open_spots}</b></div>`;
+  const memberIds = [...new Set([play.creator_id, ...(play.play_members || []).map(member => member.user_id)])];
+  const profiles = await Promise.all(memberIds.map(async id => {
+    const { data } = await sb.rpc('get_public_profile', { p_user_id:id });
+    return { id, profile:Array.isArray(data) ? data[0] : data };
+  }));
+  setText('findMembersCount', `${memberIds.length} player${memberIds.length === 1 ? '' : 's'}`);
+  const roster = document.getElementById('findTeamRoster');
+  roster.innerHTML = profiles.map(({ id, profile }) => profile
+    ? `<button class="profile-row" type="button" data-public-profile="${id}"><i>${escapeHtml(initialsFor(profile.full_name))}</i><span><strong>${escapeHtml(profile.full_name || 'PLAYYR player')}${id === play.creator_id ? ' · Creator' : ''}</strong><small>${escapeHtml(profile.city || 'PLAYYR member')}</small></span><b>›</b></button>`
+    : '<div class="profile-row"><i>PL</i><span><strong>Private PLAYYR player</strong><small>Profile discovery is disabled</small></span></div>').join('');
+  roster.querySelectorAll('[data-public-profile]').forEach(button => button.onclick = () => openPublicProfile(button.dataset.publicProfile));
+  setModalOpen(document.getElementById('findTeamDetailsModal'), true);
 }
 
 async function openPublicProfile(userId) {
