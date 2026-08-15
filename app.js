@@ -728,6 +728,67 @@ document.querySelectorAll('.action').forEach(button => {
   button.onclick = () => toast(button.dataset.message);
 });
 
+const activityModal = document.getElementById('activityModal');
+const activityTitle = document.getElementById('activityTitle');
+const activityMessage = document.getElementById('activityMessage');
+const activitySport = document.getElementById('activitySport');
+const activityLevel = document.getElementById('activityLevel');
+const activityIcon = document.getElementById('activityIcon');
+const joinActivityBtn = document.getElementById('joinActivityBtn');
+const closeActivityBtn = document.getElementById('closeActivityBtn');
+const suggestedActivities = document.querySelectorAll('#homePage .activity');
+let activeActivityCard = null;
+
+function closeActivityModal() {
+  activityModal?.classList.add('hidden');
+  document.body.style.overflow = '';
+  activeActivityCard = null;
+}
+
+function openActivityModal(card) {
+  if (!card) return;
+  activeActivityCard = card;
+  const title = card.querySelector('h3')?.textContent?.trim() || 'Suggested activity';
+  const description = card.querySelector('p')?.textContent?.trim() || 'Open a challenge and start tracking it.';
+  const label = description.split('·').map(part => part.trim()).filter(Boolean);
+  activityTitle.textContent = title;
+  activityMessage.textContent = description;
+  activitySport.textContent = label[0] || 'Activity';
+  activityLevel.textContent = label[1] || 'Suggested';
+  activityIcon.textContent = card.querySelector('.activity-icon')?.textContent?.trim() || '?';
+  activityModal.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+suggestedActivities.forEach(card => {
+  card.classList.add('is-clickable');
+  card.setAttribute('role', 'button');
+  card.tabIndex = 0;
+  card.addEventListener('click', () => openActivityModal(card));
+  card.addEventListener('keydown', event => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      openActivityModal(card);
+    }
+  });
+});
+
+joinActivityBtn?.addEventListener('click', async () => {
+  if (!activeActivityCard) return closeActivityModal();
+  closeActivityModal();
+  const challengeBtn = document.getElementById('dailyChallengeButton');
+  if (challengeBtn && challengeBtn.dataset.started !== 'true') {
+    challengeBtn.dataset.started = 'true';
+    challengeBtn.textContent = 'Mark complete';
+  }
+  toast(`Joined ${activeActivityCard.querySelector('h3')?.textContent?.trim() || 'activity'}`);
+});
+
+closeActivityBtn?.addEventListener('click', closeActivityModal);
+activityModal?.addEventListener('click', event => {
+  if (event.target === activityModal) closeActivityModal();
+});
+
 const eventFilters = document.getElementById('eventFilters');
 function filterEvents(filter = 'For you') {
   const cards = [...document.querySelectorAll('#eventsPage .event-card')];

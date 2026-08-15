@@ -523,6 +523,9 @@
     .activity h3 { font-family:var(--display);font-weight:400;text-transform:uppercase;font-size:16px;letter-spacing:.02em;margin:0 0 4px; }
     .activity p { font-size:11.5px;color:var(--muted);margin:0; }
     .activity time { margin-left:auto;font-family:var(--display);font-size:12px;letter-spacing:.05em;color:var(--lime);white-space:nowrap; }
+    .activity.is-clickable { width:100%; text-align:left; border:1.5px solid var(--stroke); padding:18px 16px; cursor:pointer; }
+    .activity.is-clickable:focus-visible { outline:3px solid rgba(123,196,40,.35); outline-offset:2px; }
+    .activity.is-clickable:hover { transform:translateX(4px) translateY(-1px); }
 
     .board { border-radius:var(--r-lg);overflow:hidden; }
     .board-row { display:flex;align-items:center;gap:12px;padding:13px 15px;border-bottom:1px solid var(--stroke-soft);transition:background .25s; }
@@ -1078,6 +1081,17 @@
       <div class="invite-details"><span id="inviteSport">Sport</span><span id="inviteCapacity">Team</span></div>
       <button id="acceptTeamInviteBtn" class="primary" type="button" disabled>Join team</button>
       <button id="declineTeamInviteBtn" class="ghost" type="button">Maybe later</button>
+    </div>
+  </div>
+  <div id="activityModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="activityTitle">
+    <div class="modal invite-card">
+      <div id="activityIcon" class="invite-team-icon">? </div>
+      <span class="eyebrow">Suggested activity</span>
+      <h2 id="activityTitle">Join the activity</h2>
+      <p id="activityMessage" class="invite-message">Open a challenge and start tracking it.</p>
+      <div class="invite-details"><span id="activitySport">Activity</span><span id="activityLevel">Suggested</span></div>
+      <button id="joinActivityBtn" class="primary" type="button">Join activity</button>
+      <button id="closeActivityBtn" class="ghost" type="button">Maybe later</button>
     </div>
   </div>
 </div>
