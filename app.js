@@ -104,6 +104,7 @@ function applyProfile(profile) {
   setText('homeGreeting', `Good evening, ${parts[0] || 'Player'} 👋`);
   setText('profileDisplayName', profile.full_name);
   setText('profilePageName', profile.full_name);
+  setText('profileHeroName', profile.full_name);
   setText('profileAvatar', initials);
   setText('settingsAvatar', initials);
   setText('leaderboardAvatar', initials);
