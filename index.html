@@ -889,9 +889,32 @@
     html[data-theme="dark"] .venue-google-credit { color:#a4aea2; }
     html[data-theme="dark"] .team-picker-trigger { background:linear-gradient(145deg,#1c251d,var(--bg)); }
     html[data-theme="dark"] .team-picker-menu { background:#141b15;border-color:var(--stroke);box-shadow:0 22px 50px rgba(0,0,0,.45),var(--sheen); }
-    html[data-theme="dark"] #registerTeamModal .team-picker-copy small { color:var(--muted); }
+    html[data-theme="dark"] #registerTeamModal .team-picker-copy small,html[data-theme="dark"] #registerTeamModal .team-picker-option small { color:var(--muted); }
     html[data-theme="dark"] .secondary-btn { background:rgba(20,27,21,.94); }
     html[data-theme="dark"] .secondary-btn:hover { background:#202a21; }
+    html[data-theme="dark"] .greeting { color:#c1c9bf; }
+    html[data-theme="dark"] .page-title { background:linear-gradient(145deg,#ffffff 18%,#dcebd7 62%,var(--lime));-webkit-background-clip:text;background-clip:text;color:transparent; }
+    html[data-theme="dark"] .section-head h2 { color:#f3f6f1; }
+    html[data-theme="dark"] .link { color:#b9c2b7; }
+    html[data-theme="dark"] .link:hover { color:var(--lime); }
+    html[data-theme="dark"] .player { color:#c1c9bf; }
+    html[data-theme="dark"] .player i,html[data-theme="dark"] .crest { color:#f3f6f1;background:linear-gradient(150deg,#273128,#1c241d);border-color:rgba(232,245,231,.22);box-shadow:inset 0 1px 0 rgba(255,255,255,.1); }
+    html[data-theme="dark"] .player.add i { color:var(--lime);background:linear-gradient(150deg,#202a21,#151c16); }
+    html[data-theme="dark"] .radius-control input[type="range"] { background:linear-gradient(90deg,var(--lime) var(--radius-progress,29%),rgba(235,245,233,.18) var(--radius-progress,29%)); }
+    html[data-theme="dark"] .xpbar,html[data-theme="dark"] .progress i { background:rgba(235,245,233,.14); }
+    html[data-theme="dark"] .detail,html[data-theme="dark"] .detail-chip { background:rgba(235,245,233,.055); }
+    html[data-theme="dark"] .board-row:hover { background:rgba(235,245,233,.055); }
+    html[data-theme="dark"] .form .d { background:rgba(235,245,233,.07); }
+    html[data-theme="dark"] .empty-state { background:rgba(235,245,233,.035); }
+    html[data-theme="dark"] .eligibility-box.ok { color:#b8ed78; }
+    html[data-theme="dark"] .eligibility-box.error { color:#ff9f96; }
+    html[data-theme="dark"] .find-list-cta { color:#0f1a0c; }
+    html[data-theme="dark"] .find-list-cta small { color:rgba(15,21,15,.7); }
+    html[data-theme="dark"] .nav { box-shadow:0 18px 44px rgba(0,0,0,.5),var(--sheen); }
+    html[data-theme="dark"] .nav button { color:#aeb8ac; }
+    html[data-theme="dark"] .nav button:hover { color:#f3f6f1; }
+    html[data-theme="dark"] .nav button.active { color:var(--lime);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 6px 18px rgba(123,196,40,.16); }
+    html[data-theme="dark"] .settings-action.danger { color:#ff8176; }
 
     @media (max-width:360px) {
       .hero-foot { align-items:stretch;flex-direction:column; }
@@ -1186,6 +1209,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="config.js"></script>
 <script src="data.js"></script>
-<script src="app.js?v=20260815-27"></script>
+<script src="app.js?v=20260815-28"></script>
 </body>
 </html>
