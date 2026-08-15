@@ -514,6 +514,19 @@ function openFindTeamDetails(teamId) {
   setModalOpen(document.getElementById('findTeamDetailsModal'), true);
 }
 
+function openStaticFindTeamDetails(card) {
+  const name = card.querySelector('h3')?.textContent?.trim() || 'Nearby team';
+  const sport = card.querySelector('.sport-name')?.textContent?.trim() || 'Local team';
+  const memberCount = card.querySelector('.members span')?.textContent?.trim() || 'Members';
+  setText('findTeamDetailsTitle', name);
+  setText('findTeamDetailsMeta', `${sport} · ${memberCount}`);
+  const details = [...card.querySelectorAll('.detail')].map(item => `<div class="detail-chip"><span>${escapeHtml(item.querySelector('span')?.textContent || 'Details')}</span><b>${escapeHtml(item.querySelector('b')?.textContent || '')}</b></div>`).join('');
+  document.getElementById('findTeamRoster').innerHTML = `<div class="detail-grid">${details}</div><div class="empty-state"><strong>Player profiles coming from live members</strong><span>Profiles will appear here when this team is connected to a PLAYYR account.</span></div>`;
+  setModalOpen(document.getElementById('findTeamDetailsModal'), true);
+}
+
+document.querySelectorAll('.static-team-details').forEach(button => button.onclick = () => openStaticFindTeamDetails(button.closest('.team')));
+
 async function openPublicProfile(userId) {
   const { data, error } = await sb.rpc('get_public_profile', { p_user_id:userId });
   const profile = Array.isArray(data) ? data[0] : data;
