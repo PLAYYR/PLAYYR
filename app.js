@@ -17,6 +17,53 @@ const SETTINGS_MAP = {
 };
 
 function setText(id, text) { const el = document.getElementById(id); if (el) el.textContent = text; }
+function currentSportsList() {
+  return [...selected];
+}
+
+function renderEventFilterChips() {
+  const row = document.getElementById('eventFilters');
+  if (!row) return;
+  const active = row.querySelector('.chip.active')?.dataset.filter || 'For you';
+  row.innerHTML = '';
+  const chips = ['For you', ...currentSportsList()];
+  chips.forEach((name, index) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `chip${index === 0 && active === 'For you' ? ' active' : ''}`;
+    button.dataset.filter = name;
+    button.textContent = name === 'For you' ? 'For you' : `${sportIcons[name] || ''} ${name}`.trim();
+    if (name === active) button.classList.add('active');
+    button.onclick = () => {
+      row.querySelectorAll('.chip').forEach(item => item.classList.toggle('active', item === button));
+      filterEvents(button.dataset.filter);
+      toast(`Showing ${button.textContent.toLowerCase()} events`);
+    };
+    row.appendChild(button);
+  });
+}
+
+function renderFindFilterChips() {
+  const row = document.getElementById('findFilters');
+  if (!row) return;
+  const active = row.querySelector('.chip.active')?.dataset.filter || 'All nearby';
+  row.innerHTML = '';
+  const chips = ['All nearby', ...currentSportsList()];
+  chips.forEach((name, index) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `chip${index === 0 && active === 'All nearby' ? ' active' : ''}`;
+    button.dataset.filter = name;
+    button.textContent = name === 'All nearby' ? 'All nearby' : `${sportIcons[name] || ''} ${name}`.trim();
+    if (name === active) button.classList.add('active');
+    button.onclick = () => {
+      row.querySelectorAll('.chip').forEach(item => item.classList.toggle('active', item === button));
+      filterFindTeams(button.dataset.filter);
+      toast(`Showing ${button.textContent.toLowerCase()} teams`);
+    };
+    row.appendChild(button);
+  });
+}
 
 function renderRadius(radius) {
   const value = Math.min(50, Math.max(1, Number(radius) || 15));
@@ -165,9 +212,12 @@ async function hydrateFromProfile(profile) {
   renderSettingsPreferences();
   bindSettingsToggles(profile);
   renderChosenInterests();
+  renderEventFilterChips();
+  renderFindFilterChips();
   const activeEventFilter = document.querySelector('#eventFilters .chip.active');
   filterEvents(activeEventFilter ? activeEventFilter.dataset.filter : 'For you');
-  filterFindTeams();
+  const activeFindFilter = document.querySelector('#findFilters .chip.active');
+  filterFindTeams(activeFindFilter ? activeFindFilter.dataset.filter : 'All nearby');
 }
 
 async function enterAppWithProfile(profile) {
@@ -347,6 +397,8 @@ async function enter(city = 'Bengaluru') {
     if (error) toast('Saved on this device; cloud sync will retry later');
   }
   renderSettingsPreferences();
+  renderEventFilterChips();
+  renderFindFilterChips();
   renderChosenInterests();
   window.scrollTo(0, 0);
 }
@@ -880,7 +932,7 @@ function filterEvents(filter = 'For you') {
   document.getElementById('eventsEmpty').classList.toggle('hidden', visible > 0);
 }
 
-function filterFindTeams() {
+function filterFindTeams(filter = 'All nearby') {
   const teams = [...document.querySelectorAll('#findPage .team')];
   const radius = Number(document.querySelector('.radius-slider')?.value) || 15;
   let visible = 0;
@@ -888,9 +940,9 @@ function filterFindTeams() {
     const distanceLabel = team.querySelector('.sport-name')?.textContent || '';
     const distance = Number((distanceLabel.match(/([\d.]+)\s*km/i) || [])[1] || 0);
     const sportText = (team.dataset.sport || team.querySelector('.sport-name')?.textContent || '').toLowerCase();
-    const matchesSport = selected.size === 0
-      ? true
-      : [...selected].some(name => sportText.includes(String(name).toLowerCase()));
+    const matchesSport = filter === 'All nearby'
+      ? (selected.size === 0 || [...selected].some(name => sportText.includes(String(name).toLowerCase())))
+      : sportText.includes(String(filter).toLowerCase());
     const matches = matchesSport && distance <= radius;
     team.hidden = !matches;
     team.classList.toggle('hidden', !matches);
@@ -901,15 +953,10 @@ function filterFindTeams() {
   if (empty) empty.classList.toggle('hidden', visible > 0);
 }
 
-if (eventFilters) eventFilters.querySelectorAll('[data-filter]').forEach(button => {
-  button.onclick = () => {
-    eventFilters.querySelectorAll('[data-filter]').forEach(item => item.classList.toggle('active', item === button));
-    filterEvents(button.dataset.filter);
-    toast(`Showing ${button.textContent.toLowerCase()} events`);
-  };
-});
-filterEvents();
-filterFindTeams();
+renderEventFilterChips();
+renderFindFilterChips();
+filterEvents(document.querySelector('#eventFilters .chip.active')?.dataset.filter || 'For you');
+filterFindTeams(document.querySelector('#findFilters .chip.active')?.dataset.filter || 'All nearby');
 
 const streakButton = document.getElementById('streakButton');
 if (streakButton) streakButton.onclick = () => {
@@ -1027,8 +1074,10 @@ function renderSettingsPreferences() {
       renderSettingsPreferences();
       renderChosenInterests();
       syncSportGridUI();
+      renderEventFilterChips();
+      renderFindFilterChips();
       filterEvents(document.querySelector('#eventFilters .chip.active')?.dataset.filter || 'For you');
-      filterFindTeams();
+      filterFindTeams(document.querySelector('#findFilters .chip.active')?.dataset.filter || 'All nearby');
       toast('Sports preferences updated');
     };
     container.appendChild(button);
