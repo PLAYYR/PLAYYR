@@ -167,6 +167,7 @@ async function hydrateFromProfile(profile) {
   renderChosenInterests();
   const activeEventFilter = document.querySelector('#eventFilters .chip.active');
   filterEvents(activeEventFilter ? activeEventFilter.dataset.filter : 'For you');
+  filterFindTeams();
 }
 
 async function enterAppWithProfile(profile) {
@@ -879,6 +880,27 @@ function filterEvents(filter = 'For you') {
   document.getElementById('eventsEmpty').classList.toggle('hidden', visible > 0);
 }
 
+function filterFindTeams() {
+  const teams = [...document.querySelectorAll('#findPage .team')];
+  const radius = Number(document.querySelector('.radius-slider')?.value) || 15;
+  let visible = 0;
+  teams.forEach(team => {
+    const distanceLabel = team.querySelector('.sport-name')?.textContent || '';
+    const distance = Number((distanceLabel.match(/([\d.]+)\s*km/i) || [])[1] || 0);
+    const sportText = (team.dataset.sport || team.querySelector('.sport-name')?.textContent || '').toLowerCase();
+    const matchesSport = selected.size === 0
+      ? true
+      : [...selected].some(name => sportText.includes(String(name).toLowerCase()));
+    const matches = matchesSport && distance <= radius;
+    team.hidden = !matches;
+    team.classList.toggle('hidden', !matches);
+    team.setAttribute('aria-hidden', String(!matches));
+    if (matches) visible += 1;
+  });
+  const empty = document.getElementById('findEmpty');
+  if (empty) empty.classList.toggle('hidden', visible > 0);
+}
+
 if (eventFilters) eventFilters.querySelectorAll('[data-filter]').forEach(button => {
   button.onclick = () => {
     eventFilters.querySelectorAll('[data-filter]').forEach(item => item.classList.toggle('active', item === button));
@@ -887,6 +909,7 @@ if (eventFilters) eventFilters.querySelectorAll('[data-filter]').forEach(button 
   };
 });
 filterEvents();
+filterFindTeams();
 
 const streakButton = document.getElementById('streakButton');
 if (streakButton) streakButton.onclick = () => {
@@ -1003,6 +1026,9 @@ function renderSettingsPreferences() {
       await saveSports();
       renderSettingsPreferences();
       renderChosenInterests();
+      syncSportGridUI();
+      filterEvents(document.querySelector('#eventFilters .chip.active')?.dataset.filter || 'For you');
+      filterFindTeams();
       toast('Sports preferences updated');
     };
     container.appendChild(button);
