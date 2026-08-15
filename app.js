@@ -795,9 +795,130 @@ const eventDetailsMapsLink = document.getElementById('eventDetailsMapsLink');
 const eventDetailsRegisterBtn = document.getElementById('eventDetailsRegisterBtn');
 const closeEventDetailsBtn = document.getElementById('closeEventDetailsBtn');
 const venueMapsBtn = document.getElementById('venueMapsBtn');
+const venueInput = document.getElementById('venue');
+const venueSuggestions = document.getElementById('venueSuggestions');
+const venueSelection = document.getElementById('venueSelection');
 let activeEventCard = null;
+let selectedVenue = null;
+let venueAutocompleteTimer = null;
+let venueRequestId = 0;
+let venueSessionToken = null;
+let googlePlacesLoader = null;
 
 const googleMapsSearchUrl = query => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query || '')}`;
+
+function loadGooglePlaces() {
+  if (window.google?.maps?.importLibrary) return Promise.resolve(window.google.maps);
+  if (googlePlacesLoader) return googlePlacesLoader;
+  const apiKey = window.PLAYYR_GOOGLE_MAPS?.apiKey?.trim();
+  if (!apiKey) return Promise.reject(new Error('Google Maps API key is not configured'));
+  googlePlacesLoader = new Promise((resolve, reject) => {
+    const callbackName = '__playyrGoogleMapsReady';
+    window[callbackName] = () => {
+      delete window[callbackName];
+      resolve(window.google.maps);
+    };
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&loading=async&libraries=places&v=weekly&callback=${callbackName}`;
+    script.onerror = () => reject(new Error('Google Maps could not be loaded'));
+    document.head.appendChild(script);
+  });
+  return googlePlacesLoader;
+}
+
+function hideVenueSuggestions() {
+  venueSuggestions?.classList.add('hidden');
+  venueInput?.setAttribute('aria-expanded', 'false');
+}
+
+function clearSelectedVenue() {
+  selectedVenue = null;
+  ['venuePlaceId', 'venueAddress', 'venueLatitude', 'venueLongitude', 'venueMapsUrl'].forEach(id => {
+    const field = document.getElementById(id);
+    if (field) field.value = '';
+  });
+  venueSelection?.classList.add('hidden');
+  if (venueSelection) venueSelection.innerHTML = '';
+}
+
+async function chooseVenue(placePrediction) {
+  const place = placePrediction.toPlace();
+  await place.fetchFields({ fields: ['id', 'displayName', 'formattedAddress', 'location', 'googleMapsURI'] });
+  const displayName = place.displayName || placePrediction.text.toString();
+  const address = place.formattedAddress || displayName;
+  const latitude = typeof place.location?.lat === 'function' ? place.location.lat() : '';
+  const longitude = typeof place.location?.lng === 'function' ? place.location.lng() : '';
+  selectedVenue = { placeId: place.id || '', displayName, address, latitude, longitude, mapsUrl: place.googleMapsURI || googleMapsSearchUrl(address) };
+  venueInput.value = displayName;
+  document.getElementById('venuePlaceId').value = selectedVenue.placeId;
+  document.getElementById('venueAddress').value = address;
+  document.getElementById('venueLatitude').value = latitude;
+  document.getElementById('venueLongitude').value = longitude;
+  document.getElementById('venueMapsUrl').value = selectedVenue.mapsUrl;
+  venueSelection.innerHTML = `<span aria-hidden="true">✓</span><span><b>${escapeHtml(displayName)}</b>${escapeHtml(address)}</span>`;
+  venueSelection.classList.remove('hidden');
+  hideVenueSuggestions();
+  venueSessionToken = null;
+}
+
+async function searchVenuePredictions(query) {
+  const currentRequest = ++venueRequestId;
+  try {
+    await loadGooglePlaces();
+    const { AutocompleteSessionToken, AutocompleteSuggestion } = await google.maps.importLibrary('places');
+    if (!venueSessionToken) venueSessionToken = new AutocompleteSessionToken();
+    const { suggestions } = await AutocompleteSuggestion.fetchAutocompleteSuggestions({
+      input: query,
+      sessionToken: venueSessionToken,
+      region: 'in',
+      language: 'en-IN'
+    });
+    if (currentRequest !== venueRequestId) return;
+    venueSuggestions.innerHTML = '';
+    suggestions.slice(0, 6).forEach(suggestion => {
+      const prediction = suggestion.placePrediction;
+      if (!prediction) return;
+      const fullText = prediction.text.toString();
+      const mainText = prediction.mainText?.toString?.() || fullText.split(',')[0];
+      const secondaryText = fullText.startsWith(mainText) ? fullText.slice(mainText.length).replace(/^,\s*/, '') : fullText;
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'venue-suggestion';
+      button.setAttribute('role', 'option');
+      button.innerHTML = `<span class="venue-suggestion-pin" aria-hidden="true">📍</span><span class="venue-suggestion-copy"><strong>${escapeHtml(mainText)}</strong><small>${escapeHtml(secondaryText || 'Google Maps place')}</small></span>`;
+      button.addEventListener('click', () => chooseVenue(prediction).catch(() => toast('Could not load that venue. Try again.')));
+      venueSuggestions.appendChild(button);
+    });
+    if (venueSuggestions.children.length) {
+      const credit = document.createElement('span');
+      credit.className = 'venue-google-credit';
+      credit.textContent = 'Powered by Google';
+      venueSuggestions.appendChild(credit);
+      venueSuggestions.classList.remove('hidden');
+      venueInput.setAttribute('aria-expanded', 'true');
+    } else {
+      hideVenueSuggestions();
+    }
+  } catch (error) {
+    hideVenueSuggestions();
+    if (error.message?.includes('not configured')) venueInput.title = 'Add your Google Maps browser key in config.js to enable venue suggestions';
+  }
+}
+
+venueInput?.addEventListener('input', () => {
+  if (!selectedVenue || venueInput.value !== selectedVenue.displayName) clearSelectedVenue();
+  window.clearTimeout(venueAutocompleteTimer);
+  const query = venueInput.value.trim();
+  if (query.length < 3 || /^(online|custom room)$/i.test(query)) return hideVenueSuggestions();
+  venueAutocompleteTimer = window.setTimeout(() => searchVenuePredictions(query), 280);
+});
+venueInput?.addEventListener('keydown', event => {
+  if (event.key === 'Escape') hideVenueSuggestions();
+});
+document.addEventListener('click', event => {
+  if (!event.target.closest('.venue-autocomplete')) hideVenueSuggestions();
+});
 
 function closeEventDetails() {
   eventDetailsModal?.classList.add('hidden');
@@ -846,9 +967,9 @@ closeEventDetailsBtn?.addEventListener('click', closeEventDetails);
 eventDetailsModal?.addEventListener('click', event => { if (event.target === eventDetailsModal) closeEventDetails(); });
 
 venueMapsBtn?.addEventListener('click', () => {
-  const venue = document.getElementById('venue')?.value?.trim();
+  const venue = venueInput?.value?.trim();
   if (!venue) return toast('Enter a venue first');
-  window.open(googleMapsSearchUrl(venue), '_blank', 'noopener');
+  window.open(selectedVenue?.mapsUrl || googleMapsSearchUrl(venue), '_blank', 'noopener');
 });
 
 const activityModal = document.getElementById('activityModal');
@@ -1024,6 +1145,8 @@ document.getElementById('hostForm').onsubmit = event => {
   const name = document.getElementById('tournamentName').value;
   closeHost();
   event.target.reset();
+  clearSelectedVenue();
+  hideVenueSuggestions();
   toast(`${name} submitted — ₹99 payment initiated`);
 };
 
