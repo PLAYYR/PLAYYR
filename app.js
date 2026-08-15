@@ -728,6 +728,76 @@ document.querySelectorAll('.action').forEach(button => {
   button.onclick = () => toast(button.dataset.message);
 });
 
+const eventDetailsModal = document.getElementById('eventDetailsModal');
+const eventDetailsTitle = document.getElementById('eventDetailsTitle');
+const eventDetailsSport = document.getElementById('eventDetailsSport');
+const eventDetailsDate = document.getElementById('eventDetailsDate');
+const eventDetailsVenue = document.getElementById('eventDetailsVenue');
+const eventDetailsFee = document.getElementById('eventDetailsFee');
+const eventDetailsDistance = document.getElementById('eventDetailsDistance');
+const eventDetailsGoing = document.getElementById('eventDetailsGoing');
+const eventDetailsSpots = document.getElementById('eventDetailsSpots');
+const eventDetailsBlurb = document.getElementById('eventDetailsBlurb');
+const eventDetailsMapsLink = document.getElementById('eventDetailsMapsLink');
+const eventDetailsRegisterBtn = document.getElementById('eventDetailsRegisterBtn');
+const closeEventDetailsBtn = document.getElementById('closeEventDetailsBtn');
+const venueMapsBtn = document.getElementById('venueMapsBtn');
+let activeEventCard = null;
+
+const googleMapsSearchUrl = query => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query || '')}`;
+
+function closeEventDetails() {
+  eventDetailsModal?.classList.add('hidden');
+  document.body.style.overflow = '';
+  activeEventCard = null;
+}
+
+function openEventDetails(card) {
+  if (!card) return;
+  activeEventCard = card;
+  const title = card.querySelector('h3')?.textContent?.trim() || 'Tournament';
+  const date = card.dataset.date || card.querySelector('.meta span')?.textContent?.replace(/^📅\s*/, '').trim() || 'Date not listed';
+  const venue = card.dataset.venue || card.querySelectorAll('.meta span')?.[1]?.textContent?.replace(/^📍\s*/, '').trim() || 'Venue not listed';
+  const fee = card.dataset.fee ? `₹${Number(card.dataset.fee).toLocaleString('en-IN')}/team` : 'Fee not listed';
+  const distance = card.dataset.distance || card.querySelector('.distance')?.textContent?.trim() || 'Nearby';
+  const spots = card.dataset.spots || card.querySelector('.spots b')?.textContent?.trim() || 'Open';
+  const going = card.querySelector('.going span')?.textContent?.trim() || 'Players going';
+  const category = card.dataset.category || 'Tournament';
+  eventDetailsTitle.textContent = title;
+  eventDetailsSport.textContent = category.toUpperCase();
+  eventDetailsDate.textContent = `📅 ${date}`;
+  eventDetailsVenue.textContent = `📍 ${venue}`;
+  eventDetailsFee.textContent = fee;
+  eventDetailsDistance.textContent = distance;
+  eventDetailsGoing.textContent = going;
+  eventDetailsSpots.textContent = spots;
+  eventDetailsBlurb.textContent = `${title} is a ${category.toLowerCase()} event at ${venue}. Tap Maps to plan your route before registering.`;
+  const mapsUrl = googleMapsSearchUrl(venue);
+  eventDetailsMapsLink.href = mapsUrl;
+  eventDetailsMapsLink.textContent = 'Open in Google Maps';
+  eventDetailsModal?.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+document.querySelectorAll('#eventsPage .view-details-btn').forEach(button => {
+  button.addEventListener('click', () => openEventDetails(button.closest('.event-card')));
+});
+
+eventDetailsRegisterBtn?.addEventListener('click', () => {
+  if (!activeEventCard) return closeEventDetails();
+  closeEventDetails();
+  openTeamRegistration(activeEventCard);
+});
+
+closeEventDetailsBtn?.addEventListener('click', closeEventDetails);
+eventDetailsModal?.addEventListener('click', event => { if (event.target === eventDetailsModal) closeEventDetails(); });
+
+venueMapsBtn?.addEventListener('click', () => {
+  const venue = document.getElementById('venue')?.value?.trim();
+  if (!venue) return toast('Enter a venue first');
+  window.open(googleMapsSearchUrl(venue), '_blank', 'noopener');
+});
+
 const activityModal = document.getElementById('activityModal');
 const activityTitle = document.getElementById('activityTitle');
 const activityMessage = document.getElementById('activityMessage');

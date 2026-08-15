@@ -391,6 +391,22 @@
     .invite-card h2 { font-family:var(--display);font-size:33px;font-weight:400;text-transform:uppercase;line-height:.95;margin:0 0 12px; }
     .invite-card .invite-message { color:var(--muted);font-size:14px;line-height:1.55;margin:0 auto 20px;max-width:350px; }
     .invite-card .invite-message strong { color:var(--ink); }
+    .event-detail-card .invite-message { margin-bottom:14px; }
+    .event-spotlight {
+      display:grid;gap:12px;text-align:left;padding:15px;border-radius:22px;
+      background:linear-gradient(180deg,rgba(123,196,40,.08),rgba(123,196,40,.03));
+      border:1px solid rgba(123,196,40,.18);margin-bottom:14px;
+    }
+    .event-spotlight h2 { font-family:var(--display);font-size:28px;line-height:.95;margin:0; }
+    .event-spotlight .meta { display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;color:var(--muted);font-size:13px; }
+    .event-spotlight .meta span { display:inline-flex;gap:6px;align-items:center; }
+    .detail-grid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0 14px; }
+    .detail-chip {
+      padding:12px 13px;border-radius:16px;background:rgba(15,21,15,.04);border:1px solid var(--stroke);
+    }
+    .detail-chip span { display:block;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px; }
+    .detail-chip b { font-family:var(--display);font-size:14px;font-weight:400;letter-spacing:.03em;color:var(--ink); }
+    .maps-link { display:block;text-align:center;text-decoration:none; }
     .invite-details { display:flex;justify-content:center;gap:8px;margin-bottom:20px; }
     .invite-details span { padding:8px 11px;border-radius:999px;background:var(--glass-3);border:1px solid var(--stroke);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em; }
     .section-head h2 {
@@ -638,6 +654,14 @@
     .event-bottom { display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--stroke-soft); }
     .spots { font-size:11px;color:var(--muted); }
     .spots b { color:var(--lime);font-family:var(--display);font-weight:400;font-size:14px;letter-spacing:.03em; }
+    .event-actions { display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end; }
+    .secondary-btn {
+      border:1.5px solid var(--stroke-strong);border-radius:14px;padding:13px 14px;
+      background:rgba(255,255,255,.9);color:var(--ink);font-family:var(--display);
+      font-size:12px;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;
+      transition:transform .18s, border-color .2s, background .2s;
+    }
+    .secondary-btn:hover { transform:translateY(-2px); border-color:rgba(123,196,40,.55); background:#fff; }
     .host {
       width:100%;margin:8px 0 22px;padding:17px;border-radius:var(--r-md);color:var(--muted);
       font-family:var(--display);font-size:14px;letter-spacing:.1em;text-transform:uppercase;
@@ -953,9 +977,9 @@
         <div class="radius-control"><div class="radius-head"><div><strong>Event radius</strong><small>Only show tournaments within this distance</small></div><output class="radius-value radiusValue">15 km</output></div><input class="radius-slider" type="range" min="1" max="50" value="15" step="1" aria-label="Event radius in kilometres"><div class="radius-scale"><span>1 km</span><span>50 km</span></div></div>
         <button id="hostBtn" class="host" type="button">＋ List a tournament on PLAYYR</button>
         <div id="eventFilters" class="filters"><button class="chip active" data-filter="For you">For you</button><button class="chip" data-filter="Football">Football</button><button class="chip" data-filter="BGMI">BGMI</button><button class="chip" data-filter="Badminton">Badminton</button><button class="chip" data-filter="Cricket">Cricket</button></div>
-        <article class="event-card" data-category="Football" data-tournament="sunday-five-a-side" data-fee="1200"><div class="event-cover"><span class="event-type">⚽ FOOTBALL</span><span class="distance">3.2 km</span><span class="cover-status hot">🔥 Filling fast</span></div><div class="event-body"><h3>Sunday 5-a-side Cup</h3><div class="meta"><span>📅 18 Aug · 7:00 AM</span><span>📍 Turf Park, HSR</span></div><div class="going"><i class="face"></i><i class="face"></i><i class="face"></i><span><b>+18 going</b> · 4 from your crew</span></div><div class="event-bottom"><span class="spots"><b>3 team spots</b> left · ₹1,200/team</span><button class="small-btn register-team-btn" type="button">Register team</button></div></div></article>
-        <article class="event-card" data-category="BGMI" data-tournament="playyr-city-showdown" data-fee="399"><div class="event-cover orange"><span class="event-type">🎮 BGMI</span><span class="distance">Online · Local</span><span class="cover-status"><i class="live-dot"></i>Qualifiers live</span></div><div class="event-body"><h3>PLAYYR City Showdown</h3><div class="meta"><span>📅 21 Aug · 6:30 PM</span><span>🏆 Prize pool ₹25,000</span></div><div class="going"><i class="face"></i><i class="face"></i><i class="face"></i><span><b>+64 going</b> · 9 squads from HSR</span></div><div class="event-bottom"><span class="spots"><b>12 squad spots</b> left · ₹399</span><button class="small-btn register-team-btn" type="button">Register team</button></div></div></article>
-        <article class="event-card" data-category="Badminton" data-tournament="open-doubles-night" data-fee="600"><div class="event-cover blue"><span class="event-type">🏸 BADMINTON</span><span class="distance">6.8 km</span><span class="cover-status">🤝 Partner finder on</span></div><div class="event-body"><h3>Open Doubles Night</h3><div class="meta"><span>📅 24 Aug · 5:00 PM</span><span>📍 Smash Arena, Indiranagar</span></div><div class="going"><i class="face"></i><i class="face"></i><i class="face"></i><span><b>+11 going</b> · 2 need a partner</span></div><div class="event-bottom"><span class="spots"><b>7 pair spots</b> left · ₹600</span><button class="small-btn register-team-btn" type="button">Register team</button></div></div></article>
+        <article class="event-card" data-category="Football" data-tournament="sunday-five-a-side" data-fee="1200" data-date="18 Aug · 7:00 AM" data-venue="Turf Park, HSR" data-prize="Prize pool on request" data-spots="3 team spots" data-distance="3.2 km"><div class="event-cover"><span class="event-type">⚽ FOOTBALL</span><span class="distance">3.2 km</span><span class="cover-status hot">🔥 Filling fast</span></div><div class="event-body"><h3>Sunday 5-a-side Cup</h3><div class="meta"><span>📅 18 Aug · 7:00 AM</span><span>📍 Turf Park, HSR</span></div><div class="going"><i class="face"></i><i class="face"></i><i class="face"></i><span><b>+18 going</b> · 4 from your crew</span></div><div class="event-bottom"><span class="spots"><b>3 team spots</b> left · ₹1,200/team</span><div class="event-actions"><button class="secondary-btn view-details-btn" type="button">View details</button><button class="small-btn register-team-btn" type="button">Register team</button></div></div></div></article>
+        <article class="event-card" data-category="BGMI" data-tournament="playyr-city-showdown" data-fee="399" data-date="21 Aug · 6:30 PM" data-venue="Online · Local" data-prize="Prize pool ₹25,000" data-spots="12 squad spots" data-distance="Online · Local"><div class="event-cover orange"><span class="event-type">🎮 BGMI</span><span class="distance">Online · Local</span><span class="cover-status"><i class="live-dot"></i>Qualifiers live</span></div><div class="event-body"><h3>PLAYYR City Showdown</h3><div class="meta"><span>📅 21 Aug · 6:30 PM</span><span>🏆 Prize pool ₹25,000</span></div><div class="going"><i class="face"></i><i class="face"></i><i class="face"></i><span><b>+64 going</b> · 9 squads from HSR</span></div><div class="event-bottom"><span class="spots"><b>12 squad spots</b> left · ₹399</span><div class="event-actions"><button class="secondary-btn view-details-btn" type="button">View details</button><button class="small-btn register-team-btn" type="button">Register team</button></div></div></div></article>
+        <article class="event-card" data-category="Badminton" data-tournament="open-doubles-night" data-fee="600" data-date="24 Aug · 5:00 PM" data-venue="Smash Arena, Indiranagar" data-prize="Partner finder on" data-spots="7 pair spots" data-distance="6.8 km"><div class="event-cover blue"><span class="event-type">🏸 BADMINTON</span><span class="distance">6.8 km</span><span class="cover-status">🤝 Partner finder on</span></div><div class="event-body"><h3>Open Doubles Night</h3><div class="meta"><span>📅 24 Aug · 5:00 PM</span><span>📍 Smash Arena, Indiranagar</span></div><div class="going"><i class="face"></i><i class="face"></i><i class="face"></i><span><b>+11 going</b> · 2 need a partner</span></div><div class="event-bottom"><span class="spots"><b>7 pair spots</b> left · ₹600</span><div class="event-actions"><button class="secondary-btn view-details-btn" type="button">View details</button><button class="small-btn register-team-btn" type="button">Register team</button></div></div></div></article>
         <div id="eventsEmpty" class="empty-state hidden"><strong>No tournaments found</strong><span>Try another sport or list a tournament for your community.</span></div>
       </section>
 
@@ -1034,7 +1058,7 @@
       <div class="modal-head"><div><span class="eyebrow">Host on PLAYYR</span><h2 id="hostTitle">List your tournament</h2><p>Share the essentials. You can add rules and fixtures later.</p></div><button type="button" id="closeHost" class="close" aria-label="Close">×</button></div>
       <div class="field"><label for="tournamentName">TOURNAMENT NAME</label><input id="tournamentName" required placeholder="e.g. Sunday 5-a-side Cup"></div>
       <div class="field-row"><div class="field"><label for="tournamentSport">SPORT / GAME</label><select id="tournamentSport" required><option>Football</option><option>BGMI</option><option>Cricket</option><option>Badminton</option><option>Basketball</option><option>Free Fire</option></select></div><div class="field"><label for="eventDate">EVENT DATE</label><input id="eventDate" type="date" required></div></div>
-      <div class="field"><label for="venue">VENUE OR ONLINE ROOM</label><input id="venue" required placeholder="Ground, arena or online"></div>
+      <div class="field"><label for="venue">VENUE OR ONLINE ROOM</label><input id="venue" required placeholder="Ground, arena or online"><button id="venueMapsBtn" class="ghost" type="button" style="margin-top:10px">Open in Google Maps</button></div>
       <div class="field-row"><div class="field"><label for="genderFilter">ELIGIBLE GENDER</label><select id="genderFilter" required><option>Open to all</option><option>Men</option><option>Women</option><option>Mixed teams</option></select></div><div class="field"><label for="ageFilter">AGE GROUP</label><select id="ageFilter" required><option>All ages</option><option>Under 14</option><option>Under 18</option><option>18–25</option><option>26–35</option><option>35+</option></select></div></div>
       <div class="field-row"><div class="field"><label for="playerFee">PLAYER ENTRY FEE</label><input id="playerFee" type="number" min="0" placeholder="₹ 0"></div><div class="field"><label for="teamSpots">AVAILABLE SPOTS</label><input id="teamSpots" type="number" min="2" required placeholder="e.g. 16"></div></div>
       <div class="fee-box"><div><span>PLAYYR listing fee</span><small>One-time fee to publish this tournament</small></div><b>₹99</b></div>
@@ -1071,6 +1095,28 @@
       <button id="payAndRegisterBtn" class="primary" type="submit" disabled>Pay & register team</button>
       <p class="terms">Registration is confirmed only after the tournament fee is paid successfully.</p>
     </form>
+  </div>
+  <div id="eventDetailsModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="eventDetailsTitle">
+    <div class="modal invite-card event-detail-card">
+      <div class="event-spotlight">
+        <span class="eyebrow" id="eventDetailsSport">Tournament details</span>
+        <h2 id="eventDetailsTitle">Tournament name</h2>
+        <div class="meta">
+          <span id="eventDetailsDate">📅 Date</span>
+          <span id="eventDetailsVenue">📍 Venue</span>
+        </div>
+      </div>
+      <div class="detail-grid">
+        <div class="detail-chip"><span>Fee</span><b id="eventDetailsFee">₹0/team</b></div>
+        <div class="detail-chip"><span>Distance</span><b id="eventDetailsDistance">Nearby</b></div>
+        <div class="detail-chip"><span>Going</span><b id="eventDetailsGoing">+0 players</b></div>
+        <div class="detail-chip"><span>Spots left</span><b id="eventDetailsSpots">Open</b></div>
+      </div>
+      <p id="eventDetailsBlurb" class="invite-message">Check the venue and key details before you register.</p>
+      <a id="eventDetailsMapsLink" class="primary maps-link" href="#" target="_blank" rel="noopener">Open in Google Maps</a>
+      <button id="eventDetailsRegisterBtn" class="ghost" type="button">Register team</button>
+      <button id="closeEventDetailsBtn" class="ghost" type="button">Close</button>
+    </div>
   </div>
   <div id="teamInviteModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="teamInviteTitle">
     <div class="modal invite-card">
