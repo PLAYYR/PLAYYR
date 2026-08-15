@@ -15,6 +15,24 @@ const SETTINGS_MAP = {
   locationSetting: 'location_enabled',
   alertsSetting: 'alerts_enabled'
 };
+const THEME_KEY = 'playyrTheme';
+
+function applyTheme(theme, persist = true) {
+  const nextTheme = theme === 'dark' ? 'dark' : 'light';
+  document.documentElement.dataset.theme = nextTheme;
+  if (persist) localStorage.setItem(THEME_KEY, nextTheme);
+  const toggle = document.getElementById('themeSetting');
+  const icon = document.getElementById('themeSettingIcon');
+  const description = document.getElementById('themeSettingDescription');
+  if (toggle) toggle.checked = nextTheme === 'dark';
+  if (icon) icon.textContent = nextTheme === 'dark' ? '☀' : '☾';
+  if (description) description.textContent = nextTheme === 'dark'
+    ? 'Dark theme is active. Switch off for light mode.'
+    : 'Use a darker interface in low light.';
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', nextTheme === 'dark' ? '#090e0a' : '#f6f5ef');
+}
+
+applyTheme(localStorage.getItem(THEME_KEY) || document.documentElement.dataset.theme || 'light', false);
 
 function setText(id, text) { const el = document.getElementById(id); if (el) el.textContent = text; }
 function currentSportsList() {
@@ -1237,6 +1255,15 @@ function renderSettingsPreferences() {
 }
 renderSettingsPreferences();
 bindSettingsToggles(null);
+
+const themeSetting = document.getElementById('themeSetting');
+if (themeSetting) {
+  applyTheme(localStorage.getItem(THEME_KEY) || 'light', false);
+  themeSetting.onchange = () => {
+    applyTheme(themeSetting.checked ? 'dark' : 'light');
+    toast(`${themeSetting.checked ? 'Dark' : 'Light'} theme enabled`);
+  };
+}
 
 const saveSettingsCity = document.getElementById('saveSettingsCity');
 const saveSettingsName = document.getElementById('saveSettingsName');

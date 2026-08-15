@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#f6f5ef" />
   <title>PLAYYR — Your city is your playground</title>
+  <script>try{document.documentElement.dataset.theme=localStorage.getItem('playyrTheme')||'light'}catch(_){}</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -41,6 +42,13 @@
       --display:'Anton',Impact,sans-serif;
       --r-xs:12px; --r-sm:16px; --r-md:20px; --r-lg:26px; --r-xl:32px;
     }
+    html[data-theme="dark"] {
+      color-scheme:dark;--bg:#090e0a;--panel:#141b15;--ink:#f3f6f1;--muted:#a4aea2;
+      --lime:#9bdd42;--mint:#45d69a;--glass:#141b15;--glass-2:#19221a;--glass-3:#202a21;
+      --stroke:rgba(232,245,231,.14);--stroke-soft:rgba(232,245,231,.08);--stroke-strong:rgba(232,245,231,.28);
+      --sheen:inset 0 1px 0 rgba(255,255,255,.07);--shadow:0 12px 28px rgba(0,0,0,.28),0 2px 8px rgba(0,0,0,.2);
+      --shadow-lg:0 28px 58px rgba(0,0,0,.42),0 7px 18px rgba(0,0,0,.24);
+    }
 
     * { box-sizing:border-box; }
     html { -webkit-text-size-adjust:100%; overflow-x:hidden; }
@@ -51,6 +59,7 @@
       background:var(--bg);
       font-family:'DM Sans',system-ui,sans-serif;
       -webkit-font-smoothing:antialiased;
+      transition:background .25s,color .25s;
     }
     button,input,select { font:inherit; }
     button { cursor:pointer; }
@@ -84,6 +93,10 @@
       background:linear-gradient(180deg,rgba(255,255,255,.35),rgba(246,245,239,.9) 38%,var(--bg) 60%);
       box-shadow:0 0 0 1px var(--stroke-soft), 0 40px 120px rgba(15,21,15,.12);
     }
+    html[data-theme="dark"] .app { background:linear-gradient(180deg,rgba(35,49,36,.7),rgba(13,19,14,.96) 38%,var(--bg) 65%);box-shadow:0 0 0 1px var(--stroke-soft),0 40px 120px rgba(0,0,0,.48); }
+    html[data-theme="dark"] .app:before { background-image:repeating-linear-gradient(90deg,rgba(230,245,229,.035) 0 1px,transparent 1px 58px),repeating-linear-gradient(0deg,rgba(230,245,229,.028) 0 1px,transparent 1px 58px); }
+    html[data-theme="dark"] .ambient i:nth-child(1) { opacity:.11; }
+    html[data-theme="dark"] .ambient i:nth-child(2) { opacity:.09; }
     .app:before {
       content:''; position:fixed; inset:0; z-index:-1; pointer-events:none; opacity:.6;
       background-image:
@@ -864,6 +877,21 @@
     .setting-row { display:flex;align-items:center;justify-content:space-between;gap:15px;padding:14px 0;border-top:1px solid var(--stroke); }.setting-row:first-of-type { border-top:0; }.setting-row strong { display:block;font-size:13px; }.setting-row small { color:var(--muted);display:block;font-size:10px;margin-top:4px;line-height:1.4; }
     .switch { position:relative;width:43px;height:25px;flex:none; }.switch input { opacity:0;position:absolute; }.switch span { position:absolute;inset:0;background:rgba(255,255,255,.14);border-radius:30px;transition:.2s; }.switch span:before { content:'';position:absolute;width:19px;height:19px;left:3px;top:3px;background:white;border-radius:50%;transition:.2s; }.switch input:checked+span { background:var(--lime); }.switch input:checked+span:before { transform:translateX(18px);background:#172018; }.switch input:focus-visible+span { outline:3px solid rgba(200,255,69,.4); }
     .settings-action { width:100%;border:0;border-top:1px solid var(--stroke);background:none;color:var(--ink);padding:14px 0;text-align:left;font-size:13px;font-weight:800; }.settings-action.danger { color:#c7473a; }
+    .theme-row-icon { width:35px;height:35px;display:grid;place-items:center;flex:none;border-radius:12px;background:linear-gradient(145deg,rgba(226,255,124,.28),rgba(123,196,40,.08));font-size:17px;font-style:normal; }
+    .theme-row-copy { display:flex;align-items:center;gap:11px; }
+    html[data-theme="dark"] .field input,html[data-theme="dark"] .field select,html[data-theme="dark"] .manual input { background:#111812; }
+    html[data-theme="dark"] .field input:focus,html[data-theme="dark"] .field select:focus,html[data-theme="dark"] .manual input:focus { background:#182119; }
+    html[data-theme="dark"] .field input::placeholder,html[data-theme="dark"] .manual input::placeholder { color:rgba(235,245,233,.38); }
+    html[data-theme="dark"] .field select option { background:#141b15;color:var(--ink); }
+    html[data-theme="dark"] .field input[type="date"] { color-scheme:dark; }
+    html[data-theme="dark"] .venue-suggestions { background:rgba(20,27,21,.98);box-shadow:0 22px 52px rgba(0,0,0,.48); }
+    html[data-theme="dark"] .venue-suggestion-pin { background:#24331c; }
+    html[data-theme="dark"] .venue-google-credit { color:#a4aea2; }
+    html[data-theme="dark"] .team-picker-trigger { background:linear-gradient(145deg,#1c251d,var(--bg)); }
+    html[data-theme="dark"] .team-picker-menu { background:#141b15;border-color:var(--stroke);box-shadow:0 22px 50px rgba(0,0,0,.45),var(--sheen); }
+    html[data-theme="dark"] #registerTeamModal .team-picker-copy small { color:var(--muted); }
+    html[data-theme="dark"] .secondary-btn { background:rgba(20,27,21,.94); }
+    html[data-theme="dark"] .secondary-btn:hover { background:#202a21; }
 
     @media (max-width:360px) {
       .hero-foot { align-items:stretch;flex-direction:column; }
@@ -1016,6 +1044,7 @@
       <section id="settingsPage" class="page hidden">
         <p class="greeting">Account & preferences</p><h1 class="page-title">Settings</h1>
         <div class="settings-profile"><div id="settingsAvatar" class="avatar">PL</div><div><h2 id="profileDisplayName">Player</h2><p id="settingsAccount">Your PLAYYR account</p></div></div>
+        <div class="settings-group"><h2>Appearance</h2><p>Choose how PLAYYR looks on this device.</p><label class="setting-row"><span class="theme-row-copy"><i id="themeSettingIcon" class="theme-row-icon" aria-hidden="true">☾</i><span><strong>Dark theme</strong><small id="themeSettingDescription">Use a darker interface in low light.</small></span></span><span class="switch"><input id="themeSetting" type="checkbox" aria-label="Use dark theme"><span></span></span></label></div>
         <div class="settings-group"><h2>Personal details</h2><p>Change the name shown on your profile, teams and invitations.</p><div class="manual"><input id="settingsNameInput" autocomplete="name" maxlength="80" placeholder="Enter your full name"><button id="saveSettingsName" type="button">Save</button></div></div>
         <div class="settings-group"><h2>Sports preferences</h2><p>Add or remove sports to personalize challenges, events and nearby teams. Choose as many as you like.</p><div id="settingsPreferences" class="preference-grid"></div></div>
         <div class="settings-group"><h2>Location</h2><p>Change the city or area used for nearby tournaments and teams.</p><div class="manual"><input id="settingsCityInput" placeholder="Enter your city or area"><button id="saveSettingsCity" type="button">Save</button></div></div>
@@ -1157,6 +1186,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="config.js"></script>
 <script src="data.js"></script>
-<script src="app.js?v=20260815-26"></script>
+<script src="app.js?v=20260815-27"></script>
 </body>
 </html>
